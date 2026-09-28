@@ -1,0 +1,109 @@
+[
+  {
+    "id": "basico-1",
+    "nivel": "basico",
+    "titulo": "El perro de Mateo",
+    "cuerpo": "Mateo tiene un perro que se llama Rex. Rex es grande y marrón. Todas las tardes, Mateo y Rex van al parque. Ahí, Rex corre y juega con una pelota. A Mateo le gusta mucho jugar con su perro.",
+    "preguntas": [
+      {
+        "id": "q1",
+        "texto": "¿Cómo se llama el perro de Mateo?",
+        "tipo": "literal",
+        "opciones": ["Rex", "Toby", "Max", "Duke"],
+        "correcta": 0
+      },
+      {
+        "id": "q2",
+        "texto": "¿De qué color es el perro?",
+        "tipo": "literal",
+        "opciones": ["Blanco", "Negro", "Marrón", "Gris"],
+        "correcta": 2
+      },
+      {
+        "id": "q3",
+        "texto": "¿Por qué creés que a Mateo le gusta ir al parque con Rex?",
+        "tipo": "inferencial",
+        "opciones": [
+          "Porque no tiene otra cosa para hacer",
+          "Porque disfruta jugar con su perro",
+          "Porque su mamá lo obliga",
+          "Porque el parque queda cerca de la escuela"
+        ],
+        "correcta": 1
+      }
+    ]
+  },
+  {
+    "id": "intermedio-1",
+    "nivel": "intermedio",
+    "titulo": "La bicicleta nueva",
+    "cuerpo": "Sofía había ahorrado dinero durante meses para comprarse una bicicleta. Cuando por fin la consiguió, se dio cuenta de que no sabía andar muy bien en dos ruedas. Su hermano mayor le propuso practicar todos los sábados en la plaza, sosteniéndola al principio y soltándola de a poco. Después de tres semanas, Sofía pudo andar sola por primera vez, y sintió que todo el esfuerzo había valido la pena.",
+    "preguntas": [
+      {
+        "id": "q1",
+        "texto": "¿Qué hizo Sofía para poder comprar la bicicleta?",
+        "tipo": "literal",
+        "opciones": ["Se la pidió prestada", "Ahorró dinero", "Se la regalaron", "La encontró"],
+        "correcta": 1
+      },
+      {
+        "id": "q2",
+        "texto": "¿Quién la ayudó a practicar?",
+        "tipo": "literal",
+        "opciones": ["Su mamá", "Su hermano mayor", "Una amiga", "Su papá"],
+        "correcta": 1
+      },
+      {
+        "id": "q3",
+        "texto": "¿Qué se puede concluir sobre el esfuerzo de Sofía?",
+        "tipo": "inferencial",
+        "opciones": [
+          "Que no sirvió de nada",
+          "Que fue en vano porque igual se cayó",
+          "Que finalmente dio resultado",
+          "Que su hermano hizo todo el trabajo"
+        ],
+        "correcta": 2
+      }
+    ]
+  },
+  {
+    "id": "avanzado-1",
+    "nivel": "avanzado",
+    "titulo": "El experimento de la clase",
+    "cuerpo": "La maestra propuso un experimento para entender por qué las plantas necesitan luz. Dividió a la clase en dos grupos: uno cuidaría una planta ubicada junto a la ventana, y el otro, una planta guardada dentro de un armario oscuro.\n\nDurante dos semanas, ambos grupos regaron sus plantas exactamente de la misma manera, con la misma cantidad de agua y en los mismos días. Cada mañana, antes de empezar la clase, un integrante de cada grupo anotaba en un cuaderno cómo se veían las hojas y el tallo, para poder comparar los cambios con el paso del tiempo.\n\nAl final de las dos semanas, la planta de la ventana estaba verde, firme y había crecido varios centímetros, mientras que la del armario tenía hojas amarillas, caídas y el tallo débil. Algunos chicos se sorprendieron, porque las dos plantas habían recibido exactamente la misma cantidad de agua.\n\nLa maestra les preguntó entonces qué había cambiado entre una planta y la otra. Después de pensarlo un rato, la clase entendió que la única diferencia había sido la luz. Así llegaron a la conclusión de que el agua sola no alcanza: las plantas también necesitan luz para poder alimentarse y crecer sanas.",
+    "preguntas": [
+      {
+        "id": "q1",
+        "texto": "¿Cuántos grupos formó la maestra?",
+        "tipo": "literal",
+        "opciones": ["Uno", "Dos", "Tres", "Cuatro"],
+        "correcta": 1
+      },
+      {
+        "id": "q2",
+        "texto": "¿Qué le pasó a la planta del armario?",
+        "tipo": "literal",
+        "opciones": [
+          "Creció más que la otra",
+          "Se mantuvo igual",
+          "Tenía hojas amarillas y caídas",
+          "Se secó por completo"
+        ],
+        "correcta": 2
+      },
+      {
+        "id": "q3",
+        "texto": "¿Cuál es la conclusión principal del experimento?",
+        "tipo": "inferencial",
+        "opciones": [
+          "Que regar todos los días es suficiente",
+          "Que las plantas necesitan luz además de agua para crecer bien",
+          "Que las plantas de interior no necesitan cuidados",
+          "Que el armario es un buen lugar para las plantas"
+        ],
+        "correcta": 1
+      }
+    ]
+  }
+]
