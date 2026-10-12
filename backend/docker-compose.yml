@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: lectur
+      POSTGRES_PASSWORD: lectur
+      POSTGRES_DB: lectur
+    ports:
+      - '5432:5432'
+    volumes:
+      - lectur-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U lectur']
+      interval: 5s
+      retries: 10
+
+  api:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://lectur:lectur@db:5432/lectur
+      JWT_SECRET: cambiar-en-produccion
+      CORS_ORIGIN: http://localhost:5173
+    ports:
+      - '3000:3000'
+
+volumes:
+  lectur-db:
