@@ -1,9 +1,9 @@
 import { Router } from 'express'
 import { autenticar } from '../middleware/auth.js'
 import { badRequest, notFound } from '../lib/errors.js'
-import { PALABRA_VALIDA } from '../lib/diccionario.js'
+import { PALABRA_VALIDA, normalizar } from '../lib/diccionario.js'
 
-export function diccionarioRouter({ diccionario }) {
+export function diccionarioRouter({ diccionario, pool }) {
   const r = Router()
   r.use(autenticar)
 
@@ -13,6 +13,14 @@ export function diccionarioRouter({ diccionario }) {
       throw badRequest('Escribí una sola palabra, solo con letras')
     }
     const def = await diccionario.buscar(palabra)
+
+    // Se registra cada consulta de un alumno (la haya encontrado o no) para que el docente la vea.
+    if (req.usuario.rol === 'alumno') {
+      await pool.query(
+        'INSERT INTO consultas (alumno_id, palabra_norm, palabra, encontrada) VALUES ($1, $2, $3, $4)',
+        [req.usuario.id, normalizar(palabra), palabra.toLowerCase(), Boolean(def)],
+      )
+    }
     if (!def) throw notFound('No encontramos esa palabra')
     res.json(def)
   })

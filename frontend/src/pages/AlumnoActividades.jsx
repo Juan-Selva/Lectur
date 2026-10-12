@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Cargando, Mensaje, Tarjeta } from '../components/ui.jsx'
+import { Categoria, Cargando, Mensaje, Tarjeta } from '../components/ui.jsx'
 import { api } from '../lib/api.js'
 
 export default function AlumnoActividades() {
@@ -32,6 +32,7 @@ export default function AlumnoActividades() {
             <Tarjeta className="flex items-center justify-between gap-3 transition hover:border-brand">
               <div>
                 <h2 className="text-lg font-bold">{a.titulo}</h2>
+                <Categoria valor={a.categoria} />
                 <p className="text-sm text-slate-600">
                   {a.conCuestionario ? 'Con preguntas' : 'Solo lectura'}
                 </p>

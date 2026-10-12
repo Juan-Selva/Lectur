@@ -7,6 +7,7 @@ import { crearServicioDiccionario } from './lib/diccionario.js'
 import { authRouter } from './routes/auth.js'
 import { textosRouter } from './routes/textos.js'
 import { docenteRouter } from './routes/docente.js'
+import { docenteAlumnosRouter } from './routes/docenteAlumnos.js'
 import { alumnoRouter } from './routes/alumno.js'
 import { diccionarioRouter } from './routes/diccionario.js'
 
@@ -22,8 +23,9 @@ export function createApp({ pool, buscarExterno, usarExterno = config.diccionari
   app.use('/api/auth', authRouter({ pool }))
   app.use('/api/textos', textosRouter({ pool }))
   app.use('/api/docente', docenteRouter({ pool }))
+  app.use('/api/docente', docenteAlumnosRouter({ pool }))
   app.use('/api/alumno', alumnoRouter({ pool }))
-  app.use('/api/diccionario', diccionarioRouter({ diccionario }))
+  app.use('/api/diccionario', diccionarioRouter({ diccionario, pool }))
 
   app.use((_req, _res, next) => next(new HttpError(404, 'Ruta inexistente')))
   // eslint-disable-next-line no-unused-vars

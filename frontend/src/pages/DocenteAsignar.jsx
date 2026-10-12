@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Boton, Cargando, Mensaje, Tarjeta } from '../components/ui.jsx'
 import { api } from '../lib/api.js'
+import { CATEGORIAS } from '../lib/categorias.js'
 
 export default function DocenteAsignar() {
   const [textos, setTextos] = useState(null)
   const [alumnos, setAlumnos] = useState(null)
   const [textoId, setTextoId] = useState('')
+  const [categoria, setCategoria] = useState('')
   const [sel, setSel] = useState([])
   const [conCuestionario, setCon] = useState(true)
   const [error, setError] = useState('')
@@ -23,6 +25,7 @@ export default function DocenteAsignar() {
 
   if (!textos || !alumnos) return error ? <Mensaje>{error}</Mensaje> : <Cargando />
 
+  const visibles = textos.filter((t) => !categoria || t.categoria === categoria)
   const texto = textos.find((t) => String(t.id) === textoId)
   const sinPreguntas = texto && texto.cantidad_preguntas === 0
   const cuestionario = conCuestionario && !sinPreguntas
@@ -49,6 +52,24 @@ export default function DocenteAsignar() {
       <h1 className="text-2xl font-bold">Asignar lectura</h1>
       <Tarjeta className="space-y-4">
         <label className="block text-sm font-medium">
+          Categoría
+          <select
+            value={categoria}
+            onChange={(e) => {
+              setCategoria(e.target.value)
+              setTextoId('')
+            }}
+            className="mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-base"
+          >
+            <option value="">Todas</option>
+            {CATEGORIAS.map((c) => (
+              <option key={c.valor} value={c.valor}>
+                {c.etiqueta}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block text-sm font-medium">
           Texto
           <select
             value={textoId}
@@ -57,7 +78,7 @@ export default function DocenteAsignar() {
           >
             <option value="">Elegí un texto…</option>
             <optgroup label="Mis textos">
-              {textos
+              {visibles
                 .filter((t) => t.propio)
                 .map((t) => (
                   <option key={t.id} value={t.id}>
@@ -66,7 +87,7 @@ export default function DocenteAsignar() {
                 ))}
             </optgroup>
             <optgroup label="Textos de Lectur">
-              {textos
+              {visibles
                 .filter((t) => !t.propio)
                 .map((t) => (
                   <option key={t.id} value={t.id}>

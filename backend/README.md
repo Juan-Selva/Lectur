@@ -34,14 +34,25 @@ Contraseña de todos: `lectur1234`
 |---|---|---|
 | POST | `/api/auth/login`, `/api/auth/registro-docente` | — |
 | GET | `/api/auth/me` | todos |
-| GET/POST | `/api/textos`, GET/DELETE `/api/textos/:id` | docente |
+| GET/POST | `/api/textos`, GET/PUT/DELETE `/api/textos/:id` (PUT solo textos propios) | docente |
 | POST | `/api/docente/alumnos` | docente |
+| GET/PUT/DELETE | `/api/docente/alumnos/:id` | docente |
+| PUT | `/api/docente/alumnos/:id/password` | docente |
+| GET | `/api/docente/alumnos/:id/historial` (detalle por pregunta) | docente |
+| GET | `/api/docente/alumnos/:id/palabras`, `/api/docente/palabras` (curso) | docente |
+| GET | `/api/docente/alumnos/:id/resumen` (resumen para familias) | docente |
+| PATCH/DELETE | `/api/docente/asignaciones/:id` (reasignar / cancelar pendientes) | docente |
+| GET | `/api/alumno/historial` | alumno |
 | GET | `/api/docente/semaforo` | docente |
 | POST | `/api/docente/asignaciones` | docente |
 | PUT | `/api/docente/alumnos/:id/nota` (texto vacío borra la nota) | docente |
 | GET | `/api/alumno/actividades`, `/api/alumno/actividades/:id` | alumno |
 | POST | `/api/alumno/actividades/:id/completar` | alumno |
 | GET | `/api/diccionario?palabra=...` | todos |
+
+## Categorías
+
+Los textos tienen categoría: ficción, historia, deporte, ciencia, naturaleza o biografía (hay biografías como la de Messi y Belgrano).
 
 ## Semáforo
 

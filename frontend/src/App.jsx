@@ -5,7 +5,11 @@ import { useAuth } from './lib/auth.jsx'
 import AlumnoActividades from './pages/AlumnoActividades.jsx'
 import AlumnoLectura from './pages/AlumnoLectura.jsx'
 import Diccionario from './pages/Diccionario.jsx'
+import AlumnoHistorial from './pages/AlumnoHistorial.jsx'
+import DocenteAlumno from './pages/DocenteAlumno.jsx'
+import DocenteResumen from './pages/DocenteResumen.jsx'
 import DocenteAsignar from './pages/DocenteAsignar.jsx'
+import DocentePalabras from './pages/DocentePalabras.jsx'
 import DocenteSemaforo from './pages/DocenteSemaforo.jsx'
 import DocenteTextos from './pages/DocenteTextos.jsx'
 import Login from './pages/Login.jsx'
@@ -40,7 +44,10 @@ export default function App() {
         }
       >
         <Route path="/docente" element={<DocenteSemaforo />} />
+        <Route path="/docente/alumnos/:id" element={<DocenteAlumno />} />
+        <Route path="/docente/alumnos/:id/resumen" element={<DocenteResumen />} />
         <Route path="/docente/asignar" element={<DocenteAsignar />} />
+        <Route path="/docente/palabras" element={<DocentePalabras />} />
         <Route path="/docente/textos" element={<DocenteTextos />} />
       </Route>
       <Route
@@ -52,6 +59,7 @@ export default function App() {
       >
         <Route path="/alumno" element={<AlumnoActividades />} />
         <Route path="/alumno/lectura/:id" element={<AlumnoLectura />} />
+        <Route path="/alumno/historial" element={<AlumnoHistorial />} />
         <Route path="/alumno/diccionario" element={<Diccionario />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

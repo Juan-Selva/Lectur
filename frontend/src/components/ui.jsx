@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { etiquetaCategoria } from '../lib/categorias.js'
 
 export function Boton({ variante = 'primario', className = '', ...props }) {
   const base =
@@ -73,4 +74,13 @@ export function Modal({ titulo, onCerrar, children }) {
       </div>
     </div>
   )
+}
+
+export function Categoria({ valor }) {
+  const etiqueta = etiquetaCategoria(valor)
+  return etiqueta ? (
+    <span className="rounded-full bg-brand-soft px-2.5 py-0.5 text-xs font-semibold text-brand-dark">
+      {etiqueta}
+    </span>
+  ) : null
 }

@@ -287,3 +287,299 @@ test('diccionario: base propia, externo con caché y fallos', async () => {
   assert.equal((await api('GET', '/api/diccionario', { token })).status, 400)
   assert.equal((await api('GET', '/api/diccionario?palabra=casa')).status, 401)
 })
+
+// ---------- Ampliación: gestión de alumnos, edición, historial, palabras, resumen, categorías ----------
+
+const alumnosDe = async (token) => (await api('GET', '/api/docente/semaforo', { token })).data.alumnos
+const idDe = async (token, nombre) => (await alumnosDe(token)).find((a) => a.nombre === nombre).id
+const textoBase = (extra = {}) => ({
+  titulo: 'Texto de prueba',
+  cuerpo: 'Un texto de prueba suficientemente largo para pasar la validación.',
+  preguntas: [{ enunciado: '¿Pregunta uno?', tipo: 'literal', opciones: ['a', 'b'], correcta: 1 }],
+  ...extra,
+})
+
+test('categorías: textos precargados (incluida biografía) y texto propio', async () => {
+  const docente = await login('docente@lectur.test')
+  const textos = (await api('GET', '/api/textos', { token: docente })).data.textos
+  const messi = textos.find((t) => t.titulo.startsWith('Lionel Messi'))
+  assert.equal(messi.categoria, 'biografia')
+  const bios = textos.filter((x) => !x.propio && x.categoria === 'biografia')
+  assert.ok(bios.length >= 7)
+  for (const n of ['Maradona', 'Kempes', 'Dibu', 'Di María', 'Pelé'])
+    assert.ok(
+      bios.some((x) => x.titulo.includes(n)),
+      n,
+    )
+  const cats = new Set(textos.filter((t) => !t.propio).map((t) => t.categoria))
+  for (const c of ['ficcion', 'historia', 'deporte', 'ciencia', 'naturaleza', 'biografia'])
+    assert.ok(cats.has(c), c)
+
+  const mal = await api('POST', '/api/textos', { token: docente, body: textoBase({ categoria: 'magia' }) })
+  assert.equal(mal.status, 400)
+  const ok = await api('POST', '/api/textos', { token: docente, body: textoBase({ categoria: 'deporte' }) })
+  assert.equal(ok.status, 201)
+  assert.equal(
+    (await api('GET', `/api/textos/${ok.data.id}`, { token: docente })).data.texto.categoria,
+    'deporte',
+  )
+})
+
+test('editar texto propio: libre sin respuestas; preguntas bloqueadas con resultados; ajeno prohibido', async () => {
+  const docente = await login('docente@lectur.test')
+  const mateo = await login('mateo@lectur.test')
+  const id = (await api('POST', '/api/textos', { token: docente, body: textoBase({ titulo: 'Editable' }) }))
+    .data.id
+
+  // Sin respuestas: se puede cambiar todo, incluidas las preguntas
+  const nuevo = textoBase({
+    titulo: 'Editable v2',
+    categoria: 'ciencia',
+    preguntas: [
+      { enunciado: '¿Otra?', tipo: 'inferencial', opciones: ['x', 'y', 'z'], correcta: 2 },
+      { enunciado: '¿Y otra más?', tipo: 'literal', opciones: ['x', 'y'], correcta: 0 },
+    ],
+  })
+  assert.equal((await api('PUT', `/api/textos/${id}`, { token: docente, body: nuevo })).status, 200)
+  const det = (await api('GET', `/api/textos/${id}`, { token: docente })).data
+  assert.equal(det.texto.titulo, 'Editable v2')
+  assert.equal(det.preguntas.length, 2)
+
+  // Un alumno lo responde
+  const mateoId = await idDe(docente, 'Mateo Pérez')
+  await api('POST', '/api/docente/asignaciones', {
+    token: docente,
+    body: { textoId: id, alumnoIds: [mateoId], conCuestionario: true },
+  })
+  const act = (await api('GET', '/api/alumno/actividades', { token: mateo })).data.actividades.find(
+    (a) => a.titulo === 'Editable v2',
+  )
+  const pr = (await api('GET', `/api/alumno/actividades/${act.id}`, { token: mateo })).data.preguntas
+  await api('POST', `/api/alumno/actividades/${act.id}/completar`, {
+    token: mateo,
+    body: { respuestas: pr.map((p) => ({ preguntaId: p.id, opcion: 0 })) },
+  })
+
+  // Con resultados: el título se puede cambiar, las preguntas no
+  assert.equal(
+    (await api('PUT', `/api/textos/${id}`, { token: docente, body: { ...nuevo, titulo: 'Editable v3' } }))
+      .status,
+    200,
+  )
+  const cambiadas = { ...nuevo, preguntas: [nuevo.preguntas[0]] }
+  assert.equal((await api('PUT', `/api/textos/${id}`, { token: docente, body: cambiadas })).status, 409)
+
+  // Precargado o ajeno
+  const pre = (await api('GET', '/api/textos', { token: docente })).data.textos.find((t) => !t.propio)
+  assert.equal((await api('PUT', `/api/textos/${pre.id}`, { token: docente, body: nuevo })).status, 403)
+  const otra = (
+    await api('POST', '/api/auth/login', { body: { email: 'otra@lectur.test', password: 'clavesegura1' } })
+  ).data.token
+  assert.equal((await api('PUT', `/api/textos/${id}`, { token: otra, body: nuevo })).status, 403)
+})
+
+test('historial con detalle por pregunta (docente) y propio sin respuestas correctas (alumno)', async () => {
+  const docente = await login('docente@lectur.test')
+  const mateo = await login('mateo@lectur.test')
+  const mateoId = await idDe(docente, 'Mateo Pérez')
+
+  const h = (await api('GET', `/api/docente/alumnos/${mateoId}/historial`, { token: docente })).data
+  const conRes = h.actividades.find((a) => a.texto.titulo === 'Mi texto propio')
+  assert.equal(conRes.estado, 'completada')
+  assert.equal(conRes.resultado.puntaje, 5)
+  assert.equal(conRes.resultado.estado, 'amarillo')
+  const fallo = conRes.resultado.preguntas.find((p) => !p.acierto)
+  assert.equal(fallo.tipo, 'inferencial')
+  assert.equal(fallo.elegida, 1)
+  assert.equal(fallo.correcta, 0)
+
+  const propio = (await api('GET', '/api/alumno/historial', { token: mateo })).data.historial
+  const item = propio.find((x) => x.titulo === 'Mi texto propio')
+  assert.deepEqual(item.aciertos, { correctas: 1, total: 2 })
+  assert.equal(item.preguntas.filter((p) => p.acierto).length, 1)
+  assert.ok(item.preguntas.every((p) => !('correcta' in p) && !('opciones' in p)))
+
+  // Un docente no ve alumnos de otro
+  const otra = (
+    await api('POST', '/api/auth/login', { body: { email: 'otra@lectur.test', password: 'clavesegura1' } })
+  ).data.token
+  assert.equal((await api('GET', `/api/docente/alumnos/${mateoId}/historial`, { token: otra })).status, 404)
+  assert.equal((await api('GET', '/api/alumno/historial', { token: docente })).status, 403)
+})
+
+test('cancelar y reasignar actividades pendientes', async () => {
+  const docente = await login('docente@lectur.test')
+  const sofia = await login('sofia@lectur.test')
+  const lucas = await login('lucas@lectur.test')
+  const [sofiaId, lucasId] = [await idDe(docente, 'Sofía Ruiz'), await idDe(docente, 'Lucas Díaz')]
+  const textoId = (
+    await api('POST', '/api/textos', { token: docente, body: textoBase({ titulo: 'Para reasignar' }) })
+  ).data.id
+  await api('POST', '/api/docente/asignaciones', {
+    token: docente,
+    body: { textoId, alumnoIds: [sofiaId], conCuestionario: true },
+  })
+  const act = (await api('GET', '/api/alumno/actividades', { token: sofia })).data.actividades.find(
+    (a) => a.titulo === 'Para reasignar',
+  )
+
+  // Reasignar a Lucas y quitar el cuestionario
+  const p = await api('PATCH', `/api/docente/asignaciones/${act.id}`, {
+    token: docente,
+    body: { alumnoId: lucasId, conCuestionario: false },
+  })
+  assert.equal(p.status, 200)
+  assert.ok(
+    !(await api('GET', '/api/alumno/actividades', { token: sofia })).data.actividades.some(
+      (a) => a.titulo === 'Para reasignar',
+    ),
+  )
+  const deLucas = (await api('GET', '/api/alumno/actividades', { token: lucas })).data.actividades.find(
+    (a) => a.titulo === 'Para reasignar',
+  )
+  assert.equal(deLucas.conCuestionario, false)
+
+  assert.equal(
+    (await api('PATCH', `/api/docente/asignaciones/${act.id}`, { token: docente, body: {} })).status,
+    400,
+  )
+
+  // Cancelar: desaparece para el alumno y ya no se puede abrir
+  assert.equal((await api('DELETE', `/api/docente/asignaciones/${act.id}`, { token: docente })).status, 204)
+  assert.ok(
+    !(await api('GET', '/api/alumno/actividades', { token: lucas })).data.actividades.some(
+      (a) => a.id === act.id,
+    ),
+  )
+  assert.equal((await api('GET', `/api/alumno/actividades/${act.id}`, { token: lucas })).status, 404)
+  assert.equal((await api('DELETE', `/api/docente/asignaciones/${act.id}`, { token: docente })).status, 404)
+
+  // Una actividad completada no se cancela ni se reasigna
+  const sofiaAct = (await api('GET', '/api/alumno/actividades', { token: sofia })).data.actividades.find(
+    (a) => a.estado === 'completada',
+  )
+  assert.equal(
+    (await api('DELETE', `/api/docente/asignaciones/${sofiaAct.id}`, { token: docente })).status,
+    404,
+  )
+  assert.equal(
+    (
+      await api('PATCH', `/api/docente/asignaciones/${sofiaAct.id}`, {
+        token: docente,
+        body: { alumnoId: lucasId },
+      })
+    ).status,
+    409,
+  )
+})
+
+test('palabras consultadas y resumen para familias', async () => {
+  const docente = await login('docente@lectur.test')
+  const mateoId = await idDe(docente, 'Mateo Pérez')
+
+  const palabras = (await api('GET', `/api/docente/alumnos/${mateoId}/palabras`, { token: docente })).data
+    .palabras
+  const montania = palabras.find((p) => p.palabra === 'montaña')
+  assert.equal(montania.veces, 2)
+  assert.equal(palabras.find((p) => p.palabra === 'zzzz').encontrada, false)
+  // el docente no genera consultas propias
+  assert.ok(
+    (await api('GET', '/api/docente/palabras', { token: docente })).data.palabras.some(
+      (p) => p.palabra === 'montaña',
+    ),
+  )
+
+  const r = (await api('GET', `/api/docente/alumnos/${mateoId}/resumen`, { token: docente })).data
+  assert.equal(r.alumno.nombre, 'Mateo Pérez')
+  assert.equal(r.conCuestionario >= 1, true)
+  assert.equal(r.estado, r.promedio >= 7 ? 'verde' : r.promedio >= 4 ? 'amarillo' : 'rojo')
+  assert.equal(r.porTipo.literal.total > 0, true)
+  assert.ok(r.fortalezas.includes('Busca en el diccionario las palabras que no conoce.'))
+  assert.ok(Array.isArray(r.sugerencias) && r.sugerencias.length > 0)
+  assert.ok(r.palabras.top.length > 0)
+})
+
+test('gestión de alumnos: editar, cambiar contraseña y borrar', async () => {
+  const docente = await login('docente@lectur.test')
+  const nuevo = await api('POST', '/api/docente/alumnos', {
+    token: docente,
+    body: { nombre: 'Para Borrar', email: 'borrar@lectur.test', password: 'clavecorta1', grado: 1 },
+  })
+  const id = nuevo.data.alumno.id
+
+  const ed = await api('PUT', `/api/docente/alumnos/${id}`, {
+    token: docente,
+    body: { nombre: 'Nombre Nuevo', email: 'nuevo@lectur.test', grado: 3 },
+  })
+  assert.equal(ed.data.alumno.nombre, 'Nombre Nuevo')
+  assert.equal(
+    (
+      await api('PUT', `/api/docente/alumnos/${id}`, {
+        token: docente,
+        body: { nombre: 'X Y', email: 'mateo@lectur.test', grado: 3 },
+      })
+    ).status,
+    409,
+  )
+
+  assert.equal(
+    (await api('PUT', `/api/docente/alumnos/${id}/password`, { token: docente, body: { password: 'corta' } }))
+      .status,
+    400,
+  )
+  assert.equal(
+    (
+      await api('PUT', `/api/docente/alumnos/${id}/password`, {
+        token: docente,
+        body: { password: 'claveNueva99' },
+      })
+    ).status,
+    204,
+  )
+  assert.equal(
+    (await api('POST', '/api/auth/login', { body: { email: 'nuevo@lectur.test', password: 'clavecorta1' } }))
+      .status,
+    401,
+  )
+  assert.equal(
+    (await api('POST', '/api/auth/login', { body: { email: 'nuevo@lectur.test', password: 'claveNueva99' } }))
+      .status,
+    200,
+  )
+
+  const otra = (
+    await api('POST', '/api/auth/login', { body: { email: 'otra@lectur.test', password: 'clavesegura1' } })
+  ).data.token
+  assert.equal((await api('DELETE', `/api/docente/alumnos/${id}`, { token: otra })).status, 404)
+  assert.equal((await api('DELETE', `/api/docente/alumnos/${id}`, { token: docente })).status, 204)
+  assert.equal(
+    (await api('POST', '/api/auth/login', { body: { email: 'nuevo@lectur.test', password: 'claveNueva99' } }))
+      .status,
+    401,
+  )
+  assert.ok(!(await alumnosDe(docente)).some((a) => a.id === id))
+
+  // Borrar un alumno con resultados limpia todo en cascada
+  const lucasId = await idDe(docente, 'Lucas Díaz')
+  assert.equal((await api('DELETE', `/api/docente/alumnos/${lucasId}`, { token: docente })).status, 204)
+})
+
+test('observaciones del resumen', async () => {
+  const { armarObservaciones } = await import('../src/lib/resumen.js')
+  const vacio = armarObservaciones({
+    literal: { correctas: 0, total: 0 },
+    inferencial: { correctas: 0, total: 0 },
+    palabrasConsultadas: 0,
+    lecturasConCuestionario: 0,
+  })
+  assert.equal(vacio.fortalezas.length, 0)
+  assert.equal(vacio.sugerencias.length, 1)
+  const fuerte = armarObservaciones({
+    literal: { correctas: 4, total: 5 },
+    inferencial: { correctas: 1, total: 4 },
+    palabrasConsultadas: 1,
+    lecturasConCuestionario: 2,
+  })
+  assert.equal(fuerte.fortalezas.length, 1)
+  assert.equal(fuerte.sugerencias.length, 1)
+})

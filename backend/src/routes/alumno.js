@@ -18,7 +18,7 @@ export function alumnoRouter({ pool }) {
   async function propia(id, alumnoId) {
     const { rows } = await pool.query(
       `SELECT a.*, t.titulo, t.cuerpo FROM asignaciones a JOIN textos t ON t.id = a.texto_id
-        WHERE a.id = $1 AND a.alumno_id = $2`,
+        WHERE a.id = $1 AND a.alumno_id = $2 AND a.estado <> 'cancelada'`,
       [id, alumnoId],
     )
     if (!rows[0]) throw notFound('Actividad no encontrada')
@@ -27,12 +27,12 @@ export function alumnoRouter({ pool }) {
 
   r.get('/actividades', async (req, res) => {
     const { rows } = await pool.query(
-      `SELECT a.id, t.titulo, a.con_cuestionario, a.estado, a.creada_en, a.completada_en,
+      `SELECT a.id, t.titulo, t.categoria, a.con_cuestionario, a.estado, a.creada_en, a.completada_en,
               r.correctas, r.total
          FROM asignaciones a
          JOIN textos t ON t.id = a.texto_id
          LEFT JOIN resultados r ON r.asignacion_id = a.id
-        WHERE a.alumno_id = $1
+        WHERE a.alumno_id = $1 AND a.estado <> 'cancelada'
         ORDER BY (a.estado = 'pendiente') DESC, a.creada_en DESC`,
       [req.usuario.id],
     )
@@ -41,11 +41,51 @@ export function alumnoRouter({ pool }) {
       actividades: rows.map((a) => ({
         id: a.id,
         titulo: a.titulo,
+        categoria: a.categoria,
         conCuestionario: a.con_cuestionario,
         estado: a.estado,
         completadaEn: a.completada_en,
         aciertos: a.correctas === null ? null : { correctas: a.correctas, total: a.total },
       })),
+    })
+  })
+
+  // Historial propio: qué leyó, cuándo y en qué preguntas acertó. No expone las respuestas correctas.
+  r.get('/historial', async (req, res) => {
+    const { rows } = await pool.query(
+      `SELECT a.id, a.texto_id, t.titulo, t.categoria, a.con_cuestionario, a.completada_en,
+              r.correctas, r.total, r.respuestas
+         FROM asignaciones a
+         JOIN textos t ON t.id = a.texto_id
+         LEFT JOIN resultados r ON r.asignacion_id = a.id
+        WHERE a.alumno_id = $1 AND a.estado = 'completada'
+        ORDER BY a.completada_en DESC`,
+      [req.usuario.id],
+    )
+    const ids = [...new Set(rows.filter((x) => x.respuestas).map((x) => x.texto_id))]
+    const pregs = ids.length
+      ? (
+          await pool.query(
+            'SELECT id, texto_id, enunciado, tipo FROM preguntas WHERE texto_id = ANY($1::int[]) ORDER BY orden',
+            [ids],
+          )
+        ).rows
+      : []
+    res.json({
+      historial: rows.map((x) => {
+        const ok = new Map((x.respuestas ?? []).map((p) => [p.preguntaId, p.acierto]))
+        return {
+          id: x.id,
+          titulo: x.titulo,
+          categoria: x.categoria,
+          completadaEn: x.completada_en,
+          conCuestionario: x.con_cuestionario,
+          aciertos: x.respuestas ? { correctas: x.correctas, total: x.total } : null,
+          preguntas: pregs
+            .filter((p) => p.texto_id === x.texto_id)
+            .map((p) => ({ enunciado: p.enunciado, tipo: p.tipo, acierto: ok.get(p.id) === true })),
+        }
+      }),
     })
   })
 

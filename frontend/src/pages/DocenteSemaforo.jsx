@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Boton, Campo, Cargando, Mensaje, Modal, Tarjeta } from '../components/ui.jsx'
 import { api } from '../lib/api.js'
 import { estadoInfo } from '../lib/semaforo.js'
@@ -108,6 +109,7 @@ export default function DocenteSemaforo() {
   const [error, setError] = useState('')
   const [nota, setNota] = useState(null)
   const [nuevo, setNuevo] = useState(false)
+  const [palabras, setPalabras] = useState([])
 
   const cargar = useCallback(() => {
     api
@@ -116,6 +118,12 @@ export default function DocenteSemaforo() {
       .catch((e) => setError(e.message))
   }, [])
   useEffect(cargar, [cargar])
+  useEffect(() => {
+    api
+      .palabrasCurso()
+      .then((r) => setPalabras(r.palabras))
+      .catch(() => {})
+  }, [])
 
   if (error) return <Mensaje>{error}</Mensaje>
   if (!alumnos) return <Cargando />
@@ -141,7 +149,14 @@ export default function DocenteSemaforo() {
           <Tarjeta key={a.id} className="space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <h2 className="text-lg font-bold">{a.nombre}</h2>
+                <h2 className="text-lg font-bold">
+                  <Link
+                    to={`/docente/alumnos/${a.id}`}
+                    className="hover:text-brand hover:underline"
+                  >
+                    {a.nombre}
+                  </Link>
+                </h2>
                 <p className="text-sm text-slate-500">
                   {a.grado}° grado
                   {a.pendientes > 0 && ` · ${a.pendientes} pendiente${a.pendientes > 1 ? 's' : ''}`}
@@ -181,6 +196,21 @@ export default function DocenteSemaforo() {
           </Tarjeta>
         )
       })}
+      {palabras.length > 0 && (
+        <Tarjeta>
+          <h2 className="mb-2 font-bold">Palabras más consultadas por el curso</h2>
+          <p className="flex flex-wrap gap-2">
+            {palabras.slice(0, 10).map((p) => (
+              <span
+                key={p.palabra}
+                className="rounded-full bg-brand-soft px-3 py-1 text-sm text-brand-dark"
+              >
+                {p.palabra} <span className="text-xs text-slate-500">×{p.veces}</span>
+              </span>
+            ))}
+          </p>
+        </Tarjeta>
+      )}
       {nota && (
         <ModalNota
           alumno={nota}

@@ -12,8 +12,8 @@ export async function seedBase(pool) {
     const ya = await pool.query('SELECT 1 FROM textos WHERE titulo = $1 AND autor_id IS NULL', [t.titulo])
     if (ya.rowCount) continue
     const { rows } = await pool.query(
-      'INSERT INTO textos (titulo, cuerpo, nivel, autor_id) VALUES ($1, $2, $3, NULL) RETURNING id',
-      [t.titulo, t.cuerpo, t.nivel],
+      'INSERT INTO textos (titulo, cuerpo, nivel, categoria, autor_id) VALUES ($1, $2, $3, $4, NULL) RETURNING id',
+      [t.titulo, t.cuerpo, t.nivel, t.categoria],
     )
     for (const [i, p] of t.preguntas.entries()) {
       await pool.query(

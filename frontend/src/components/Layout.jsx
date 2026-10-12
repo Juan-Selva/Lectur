@@ -10,7 +10,7 @@ export default function Layout() {
   const esDocente = usuario.rol === 'docente'
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white">
+      <header className="border-b border-slate-200 bg-white print:hidden">
         <div className="mx-auto flex max-w-4xl flex-wrap items-center gap-3 px-4 py-3">
           <img src={logo} alt="Lectur" className="h-9 w-auto" />
           <nav className="flex gap-1" aria-label="Principal">
@@ -22,6 +22,9 @@ export default function Layout() {
                 <NavLink to="/docente/asignar" className={link}>
                   Asignar
                 </NavLink>
+                <NavLink to="/docente/palabras" className={link}>
+                  Palabras
+                </NavLink>
                 <NavLink to="/docente/textos" className={link}>
                   Textos
                 </NavLink>
@@ -30,6 +33,9 @@ export default function Layout() {
               <>
                 <NavLink to="/alumno" end className={link}>
                   Mis lecturas
+                </NavLink>
+                <NavLink to="/alumno/historial" className={link}>
+                  Historial
                 </NavLink>
                 <NavLink to="/alumno/diccionario" className={link}>
                   Diccionario
