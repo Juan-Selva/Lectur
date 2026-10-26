@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { autenticar, firmarToken } from '../middleware/auth.js'
 import { HttpError, conflict } from '../lib/errors.js'
 import { parsear } from '../lib/validar.js'
+import { VERSION_TERMINOS } from '../lib/terminos.js'
 
 const loginSchema = z.object({ email: z.string().email(), password: z.string().min(1) })
 const registroSchema = z.object({
@@ -12,7 +13,15 @@ const registroSchema = z.object({
   password: z.string().min(8).max(100),
 })
 
-const publico = (u) => ({ id: u.id, nombre: u.nombre, email: u.email, rol: u.rol, grado: u.grado })
+const publico = (u) => ({
+  id: u.id,
+  nombre: u.nombre,
+  email: u.email,
+  rol: u.rol,
+  grado: u.grado,
+  terminosAceptados: u.acepto_terminos_version === VERSION_TERMINOS,
+})
+const aceptarSchema = z.object({ acepto: z.literal(true) })
 
 export function authRouter({ pool }) {
   const r = Router()
@@ -44,6 +53,17 @@ export function authRouter({ pool }) {
 
   r.get('/me', autenticar, async (req, res) => {
     const { rows } = await pool.query('SELECT * FROM usuarios WHERE id = $1', [req.usuario.id])
+    if (!rows[0]) throw new HttpError(401, 'Usuario inexistente')
+    res.json({ usuario: publico(rows[0]) })
+  })
+
+  // Primer ingreso: el docente acepta por sí mismo; en el caso del alumno lo hace un adulto responsable.
+  r.post('/aceptar-terminos', autenticar, async (req, res) => {
+    parsear(aceptarSchema, req.body)
+    const { rows } = await pool.query(
+      'UPDATE usuarios SET acepto_terminos_version = $1, acepto_terminos_en = now() WHERE id = $2 RETURNING *',
+      [VERSION_TERMINOS, req.usuario.id],
+    )
     if (!rows[0]) throw new HttpError(401, 'Usuario inexistente')
     res.json({ usuario: publico(rows[0]) })
   })

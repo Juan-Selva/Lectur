@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Boton, Cargando, Mensaje, Tarjeta } from '../components/ui.jsx'
 import { api } from '../lib/api.js'
+import { useCursos } from '../lib/cursos.jsx'
 import { CATEGORIAS } from '../lib/categorias.js'
 
 export default function DocenteAsignar() {
@@ -14,14 +15,23 @@ export default function DocenteAsignar() {
   const [error, setError] = useState('')
   const [ok, setOk] = useState('')
 
+  const { cursoId } = useCursos()
+
   useEffect(() => {
-    Promise.all([api.textos(), api.semaforo()])
-      .then(([t, s]) => {
-        setTextos(t.textos)
-        setAlumnos(s.alumnos)
-      })
+    api
+      .textos()
+      .then((t) => setTextos(t.textos))
       .catch((e) => setError(e.message))
   }, [])
+  useEffect(() => {
+    api
+      .semaforo(cursoId)
+      .then((s) => {
+        setAlumnos(s.alumnos)
+        setSel([])
+      })
+      .catch((e) => setError(e.message))
+  }, [cursoId])
 
   if (!textos || !alumnos) return error ? <Mensaje>{error}</Mensaje> : <Cargando />
 

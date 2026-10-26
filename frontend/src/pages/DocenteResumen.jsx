@@ -6,6 +6,7 @@ import logo from '../assets/logo.png'
 import { api } from '../lib/api.js'
 import { estadoInfo } from '../lib/semaforo.js'
 import { etiquetaCategoria } from '../lib/categorias.js'
+import { descargarInformePdf } from '../lib/informePdf.js'
 
 const pct = (t) => (t.total ? `${Math.round((t.correctas / t.total) * 100)}%` : '—')
 
@@ -14,6 +15,7 @@ export default function DocenteResumen() {
   const [r, setR] = useState(null)
   const [error, setError] = useState('')
   const [conNota, setConNota] = useState(false)
+  const [generando, setGenerando] = useState(false)
 
   useEffect(() => {
     api
@@ -21,6 +23,17 @@ export default function DocenteResumen() {
       .then(setR)
       .catch((e) => setError(e.message))
   }, [id])
+
+  async function descargar() {
+    setGenerando(true)
+    try {
+      await descargarInformePdf(r, { conNota })
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setGenerando(false)
+    }
+  }
 
   if (error) return <Mensaje>{error}</Mensaje>
   if (!r) return <Cargando />
@@ -47,7 +60,12 @@ export default function DocenteResumen() {
               Incluir mi nota
             </label>
           )}
-          <Boton onClick={() => window.print()}>Imprimir / guardar PDF</Boton>
+          <Boton variante="suave" onClick={() => window.print()}>
+            Imprimir
+          </Boton>
+          <Boton onClick={descargar} disabled={generando}>
+            {generando ? 'Generando…' : 'Descargar PDF'}
+          </Boton>
         </div>
       </div>
 
@@ -149,6 +167,16 @@ export default function DocenteResumen() {
                 ))}
               </tbody>
             </table>
+          </section>
+        )}
+
+        {r.practicas > 0 && (
+          <section>
+            <h2 className="mb-2 font-bold">Por iniciativa propia</h2>
+            <p className="text-sm text-slate-700">
+              Eligió leer {r.practicas} {r.practicas === 1 ? 'texto' : 'textos'} por su cuenta. Su
+              mejor racha fue de {r.racha.mejor} {r.racha.mejor === 1 ? 'día' : 'días'} seguidos.
+            </p>
           </section>
         )}
 

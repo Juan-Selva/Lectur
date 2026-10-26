@@ -4,7 +4,8 @@ import { config } from './config.js'
 import { createPool } from './db.js'
 import { migrate } from './migrate.js'
 import { normalizar } from './lib/diccionario.js'
-import { textos, definiciones } from './seed-data.js'
+import { textos } from './seed-data.js'
+import { definiciones } from './diccionario-data.js'
 
 // Carga textos y definiciones precargados (idempotente).
 export async function seedBase(pool) {
@@ -22,10 +23,13 @@ export async function seedBase(pool) {
       )
     }
   }
+  // Las definiciones propias pisan a las que se hayan guardado antes de la fuente externa,
+  // y se actualizan si cambia el texto: el diccionario propio siempre tiene prioridad.
   for (const [palabra, significado] of definiciones) {
     await pool.query(
       `INSERT INTO definiciones (palabra_norm, palabra, significado, fuente) VALUES ($1, $2, $3, 'propia')
-       ON CONFLICT (palabra_norm) DO NOTHING`,
+       ON CONFLICT (palabra_norm) DO UPDATE
+         SET palabra = EXCLUDED.palabra, significado = EXCLUDED.significado, fuente = 'propia'`,
       [normalizar(palabra), palabra, significado],
     )
   }
@@ -39,15 +43,28 @@ export async function seedDemo(pool) {
      ON CONFLICT (email) DO UPDATE SET nombre = EXCLUDED.nombre RETURNING id`,
     [hash],
   )
-  for (const [nombre, email, grado] of [
-    ['Mateo Pérez', 'mateo@lectur.test', 2],
-    ['Sofía Ruiz', 'sofia@lectur.test', 2],
-    ['Lucas Díaz', 'lucas@lectur.test', 3],
+  const cursos = {}
+  for (const [nombre, grado] of [
+    ['2.° A', 2],
+    ['3.° B', 3],
+  ]) {
+    const { rows } = await pool.query(
+      `INSERT INTO cursos (docente_id, nombre, grado) VALUES ($1, $2, $3)
+       ON CONFLICT (docente_id, nombre) DO UPDATE SET grado = EXCLUDED.grado RETURNING id`,
+      [docente.rows[0].id, nombre, grado],
+    )
+    cursos[nombre] = { id: rows[0].id, grado }
+  }
+  for (const [nombre, email, curso] of [
+    ['Mateo Pérez', 'mateo@lectur.test', '2.° A'],
+    ['Sofía Ruiz', 'sofia@lectur.test', '2.° A'],
+    ['Lucas Díaz', 'lucas@lectur.test', '3.° B'],
   ]) {
     await pool.query(
-      `INSERT INTO usuarios (nombre, email, password_hash, rol, grado, docente_id) VALUES ($1, $2, $3, 'alumno', $4, $5)
-       ON CONFLICT (email) DO NOTHING`,
-      [nombre, email, hash, grado, docente.rows[0].id],
+      `INSERT INTO usuarios (nombre, email, password_hash, rol, grado, docente_id, curso_id)
+       VALUES ($1, $2, $3, 'alumno', $4, $5, $6)
+       ON CONFLICT (email) DO UPDATE SET curso_id = EXCLUDED.curso_id, grado = EXCLUDED.grado`,
+      [nombre, email, hash, String(cursos[curso].grado), docente.rows[0].id, cursos[curso].id],
     )
   }
 }

@@ -14,6 +14,8 @@ export const config = {
   databaseUrl: required('DATABASE_URL', 'postgres://postgres:postgres@localhost:5432/lectur'),
   jwtSecret: required('JWT_SECRET', 'secreto-solo-para-desarrollo'),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '8h',
+  // Zona horaria con la que se cuentan los días de la racha.
+  zonaHoraria: process.env.ZONA_HORARIA ?? 'America/Argentina/Buenos_Aires',
   corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
   // Si es 'false', no se consulta la fuente externa del diccionario.
   diccionarioExterno: (process.env.DICCIONARIO_EXTERNO ?? (isTest ? 'false' : 'true')) !== 'false',

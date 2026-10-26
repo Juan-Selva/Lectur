@@ -7,7 +7,11 @@ import { crearServicioDiccionario } from './lib/diccionario.js'
 import { authRouter } from './routes/auth.js'
 import { textosRouter } from './routes/textos.js'
 import { docenteRouter } from './routes/docente.js'
+import { alertasRouter } from './routes/alertas.js'
+import { cursosRouter } from './routes/cursos.js'
+import { importarAlumnosRouter } from './routes/importarAlumnos.js'
 import { docenteAlumnosRouter } from './routes/docenteAlumnos.js'
+import { alumnoPracticaRouter } from './routes/alumnoPractica.js'
 import { alumnoRouter } from './routes/alumno.js'
 import { diccionarioRouter } from './routes/diccionario.js'
 
@@ -22,8 +26,12 @@ export function createApp({ pool, buscarExterno, usarExterno = config.diccionari
   app.get('/api/health', (_req, res) => res.json({ ok: true }))
   app.use('/api/auth', authRouter({ pool }))
   app.use('/api/textos', textosRouter({ pool }))
+  app.use('/api/cursos', cursosRouter({ pool }))
+  app.use('/api/docente', alertasRouter({ pool }))
+  app.use('/api/docente', importarAlumnosRouter({ pool }))
   app.use('/api/docente', docenteRouter({ pool }))
   app.use('/api/docente', docenteAlumnosRouter({ pool }))
+  app.use('/api/alumno', alumnoPracticaRouter({ pool }))
   app.use('/api/alumno', alumnoRouter({ pool }))
   app.use('/api/diccionario', diccionarioRouter({ diccionario, pool }))
 

@@ -1,5 +1,9 @@
 @import 'tailwindcss';
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* Inter se sirve desde la propia app (sin pedirla a Google Fonts) */
+@import '@fontsource/inter/latin-400.css';
+@import '@fontsource/inter/latin-500.css';
+@import '@fontsource/inter/latin-600.css';
+@import '@fontsource/inter/latin-700.css';
 
 @theme {
   --font-sans: 'Inter', system-ui, sans-serif;
@@ -15,4 +19,33 @@
 
 body {
   @apply bg-slate-50 font-sans text-ink antialiased;
+}
+
+/* Texto de lectura: respeta los ajustes de tamaño y espaciado de cada persona. */
+.lectura {
+  font-size: calc(1.25rem * var(--lectura-escala, 1));
+  line-height: var(--lectura-interlineado, 1.8);
+  letter-spacing: var(--lectura-letras, 0em);
+  word-spacing: var(--lectura-palabras, 0em);
+}
+
+/* Alto contraste: oscurece textos y bordes, y refuerza el foco. */
+html[data-contraste='alto'] {
+  --color-ink: #000000;
+  --color-brand: #00457f;
+  --color-brand-dark: #002f57;
+  --color-brand-soft: #dbeafe;
+  --color-success: #0f5c34;
+  --color-danger: #9b1c1c;
+  --color-slate-50: #ffffff;
+  --color-slate-200: #6b7280;
+  --color-slate-300: #374151;
+  --color-slate-400: #1f2937;
+  --color-slate-500: #111827;
+  --color-slate-600: #111827;
+  --color-slate-700: #000000;
+}
+html[data-contraste='alto'] *:focus-visible {
+  outline: 3px solid #000000;
+  outline-offset: 2px;
 }

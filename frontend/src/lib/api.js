@@ -36,9 +36,12 @@ async function request(metodo, ruta, body) {
   return data
 }
 
+const filtro = (cursoId) => (cursoId ? `?cursoId=${cursoId}` : '')
+
 export const api = {
   login: (email, password) => request('POST', '/auth/login', { email, password }),
   me: () => request('GET', '/auth/me'),
+  aceptarTerminos: () => request('POST', '/auth/aceptar-terminos', { acepto: true }),
 
   // docente
   textos: () => request('GET', '/textos'),
@@ -46,15 +49,28 @@ export const api = {
   crearTexto: (d) => request('POST', '/textos', d),
   borrarTexto: (id) => request('DELETE', `/textos/${id}`),
   editarTexto: (id, d) => request('PUT', `/textos/${id}`, d),
-  semaforo: () => request('GET', '/docente/semaforo'),
+  cursos: () => request('GET', '/cursos'),
+  crearCurso: (d) => request('POST', '/cursos', d),
+  editarCurso: (id, d) => request('PUT', `/cursos/${id}`, d),
+  borrarCurso: (id) => request('DELETE', `/cursos/${id}`),
+  semaforo: (cursoId) => request('GET', `/docente/semaforo${filtro(cursoId)}`),
+  importarAlumnos: (d) => request('POST', '/docente/alumnos/importar', d),
   crearAlumno: (d) => request('POST', '/docente/alumnos', d),
   alumno: (id) => request('GET', `/docente/alumnos/${id}`),
   editarAlumno: (id, d) => request('PUT', `/docente/alumnos/${id}`, d),
   passwordAlumno: (id, password) => request('PUT', `/docente/alumnos/${id}/password`, { password }),
   borrarAlumno: (id) => request('DELETE', `/docente/alumnos/${id}`),
+  borrarDatosAlumno: (id) => request('DELETE', `/docente/alumnos/${id}/datos`),
+  alertas: (cursoId) => request('GET', `/docente/alertas${filtro(cursoId)}`),
+  alertaVista: (d) => request('POST', '/docente/alertas/vista', d),
+  alertasVistas: (cursoId) => request('POST', `/docente/alertas/vistas${filtro(cursoId)}`),
+  alertasConfig: () => request('GET', '/docente/alertas/config'),
+  guardarAlertasConfig: (c) => request('PUT', '/docente/alertas/config', c),
+  rachaAlumno: (id) => request('GET', `/docente/alumnos/${id}/racha`),
+  practicasAlumno: (id) => request('GET', `/docente/alumnos/${id}/practicas`),
   historialAlumno: (id) => request('GET', `/docente/alumnos/${id}/historial`),
   palabrasAlumno: (id) => request('GET', `/docente/alumnos/${id}/palabras`),
-  palabrasCurso: () => request('GET', '/docente/palabras'),
+  palabrasCurso: (cursoId) => request('GET', `/docente/palabras${filtro(cursoId)}`),
   resumen: (id) => request('GET', `/docente/alumnos/${id}/resumen`),
   reasignar: (id, d) => request('PATCH', `/docente/asignaciones/${id}`, d),
   cancelar: (id) => request('DELETE', `/docente/asignaciones/${id}`),
@@ -63,6 +79,11 @@ export const api = {
 
   // alumno
   actividades: () => request('GET', '/alumno/actividades'),
+  racha: () => request('GET', '/alumno/racha'),
+  practicaTextos: () => request('GET', '/alumno/practica/textos'),
+  practicaTexto: (id) => request('GET', `/alumno/practica/textos/${id}`),
+  practicaCompletar: (id, respuestas) =>
+    request('POST', `/alumno/practica/textos/${id}/completar`, { respuestas }),
   historial: () => request('GET', '/alumno/historial'),
   actividad: (id) => request('GET', `/alumno/actividades/${id}`),
   completar: (id, respuestas) =>

@@ -29,9 +29,14 @@ export function AuthProvider({ children }) {
     return r.usuario
   }, [])
 
+  const aceptarTerminos = useCallback(async () => {
+    const r = await api.aceptarTerminos()
+    setUsuario(r.usuario)
+  }, [])
+
   const valor = useMemo(
-    () => ({ usuario, cargando, entrar, salir }),
-    [usuario, cargando, entrar, salir],
+    () => ({ usuario, cargando, entrar, salir, aceptarTerminos }),
+    [usuario, cargando, entrar, salir, aceptarTerminos],
   )
   return <AuthContext.Provider value={valor}>{children}</AuthContext.Provider>
 }

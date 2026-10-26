@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Boton, Campo, Cargando, Mensaje, Modal, Tarjeta } from '../components/ui.jsx'
 import { api } from '../lib/api.js'
+import { InsigniaRacha } from '../components/Racha.jsx'
+import { useCursos } from '../lib/cursos.jsx'
 import { estadoInfo } from '../lib/semaforo.js'
 
 function ModalNota({ alumno, onCerrar, onGuardada }) {
@@ -42,13 +44,14 @@ function ModalNota({ alumno, onCerrar, onGuardada }) {
 }
 
 function ModalAlumno({ onCerrar, onCreado }) {
-  const [f, setF] = useState({ nombre: '', email: '', password: '', grado: '1' })
+  const { cursos, cursoId } = useCursos()
+  const [f, setF] = useState({ nombre: '', email: '', password: '', cursoId: cursoId })
   const [error, setError] = useState('')
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
   async function crear(e) {
     e.preventDefault()
     try {
-      await api.crearAlumno({ ...f, grado: Number(f.grado) })
+      await api.crearAlumno({ ...f, cursoId: Number(f.cursoId) })
       onCreado()
     } catch (err) {
       setError(err.message)
@@ -56,6 +59,7 @@ function ModalAlumno({ onCerrar, onCreado }) {
   }
   return (
     <Modal titulo="Agregar alumno" onCerrar={onCerrar}>
+      {cursos.length === 0 && <Mensaje>Primero creá un curso en la sección Cursos.</Mensaje>}
       <form onSubmit={crear} className="space-y-3">
         <Campo
           id="n"
@@ -82,15 +86,17 @@ function ModalAlumno({ onCerrar, onCreado }) {
           onChange={set('password')}
         />
         <label className="block text-sm font-medium">
-          Grado
+          Curso
           <select
-            value={f.grado}
-            onChange={set('grado')}
+            value={f.cursoId}
+            onChange={set('cursoId')}
+            required
             className="mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5"
           >
-            {[1, 2, 3].map((g) => (
-              <option key={g} value={g}>
-                {g}° grado
+            <option value="">Elegí un curso…</option>
+            {cursos.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nombre}
               </option>
             ))}
           </select>
@@ -110,20 +116,22 @@ export default function DocenteSemaforo() {
   const [nota, setNota] = useState(null)
   const [nuevo, setNuevo] = useState(false)
   const [palabras, setPalabras] = useState([])
+  const { cursos, cursoId } = useCursos()
+  const cursoActual = cursos.find((c) => String(c.id) === cursoId)
 
   const cargar = useCallback(() => {
     api
-      .semaforo()
+      .semaforo(cursoId)
       .then((r) => setAlumnos(r.alumnos))
       .catch((e) => setError(e.message))
-  }, [])
+  }, [cursoId])
   useEffect(cargar, [cargar])
   useEffect(() => {
     api
-      .palabrasCurso()
+      .palabrasCurso(cursoId)
       .then((r) => setPalabras(r.palabras))
       .catch(() => {})
-  }, [])
+  }, [cursoId])
 
   if (error) return <Mensaje>{error}</Mensaje>
   if (!alumnos) return <Cargando />
@@ -131,10 +139,20 @@ export default function DocenteSemaforo() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">Semáforo del curso</h1>
-        <Boton variante="suave" onClick={() => setNuevo(true)}>
-          + Agregar alumno
-        </Boton>
+        <h1 className="text-2xl font-bold">
+          Semáforo{cursoActual ? ` — ${cursoActual.nombre}` : ' del curso'}
+        </h1>
+        <div className="flex flex-wrap gap-2">
+          <Boton variante="suave" onClick={() => setNuevo(true)}>
+            + Agregar alumno
+          </Boton>
+          <Link
+            to="/docente/importar"
+            className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold hover:bg-slate-50"
+          >
+            Cargar desde archivo
+          </Link>
+        </div>
       </div>
       <p className="text-sm text-slate-600">
         Se calcula con el último cuestionario resuelto: 7 o más En nivel, de 4 a menos de 7 A
@@ -158,9 +176,11 @@ export default function DocenteSemaforo() {
                   </Link>
                 </h2>
                 <p className="text-sm text-slate-500">
+                  {a.curso ? `${a.curso} · ` : ''}
                   {a.grado}° grado
                   {a.pendientes > 0 && ` · ${a.pendientes} pendiente${a.pendientes > 1 ? 's' : ''}`}
                 </p>
+                <InsigniaRacha racha={a.racha} />
               </div>
               <span
                 className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-semibold ${info.chip}`}

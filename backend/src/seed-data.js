@@ -1,7 +1,10 @@
-// Contenido precargado: textos de primer ciclo con preguntas y definiciones simples.
+// Contenido precargado: textos de primer ciclo con preguntas.
+// `vocabulario`: palabras del texto que un chico podría no conocer; todas tienen que estar en el diccionario propio
+// (src/diccionario-data.js), y un test lo verifica.
 export const textos = [
   {
     titulo: 'El gato Manchas',
+    vocabulario: ['mancha', 'posarse', 'vidrio', 'cola', 'ventana', 'quieto'],
     nivel: 'facil',
     categoria: 'ficcion',
     cuerpo:
@@ -29,6 +32,7 @@ export const textos = [
   },
   {
     titulo: 'La lluvia de la tarde',
+    vocabulario: ['paraguas', 'abrigo', 'cubrir', 'viento', 'generoso'],
     nivel: 'intermedio',
     categoria: 'ficcion',
     cuerpo:
@@ -62,6 +66,22 @@ export const textos = [
   },
   {
     titulo: 'El huerto de la abuela',
+    vocabulario: [
+      'huerto',
+      'sembrar',
+      'cosechar',
+      'regar',
+      'semilla',
+      'paciencia',
+      'vecino',
+      'remover',
+      'lata',
+      'ensalada',
+      'lechuga',
+      'tomate',
+      'zanahoria',
+      'primavera',
+    ],
     nivel: 'dificil',
     categoria: 'naturaleza',
     cuerpo:
@@ -95,6 +115,7 @@ export const textos = [
   },
   {
     titulo: 'Lionel Messi, el chico que amaba el fútbol',
+    vocabulario: ['selección', 'barrio', 'festejar', 'famoso', 'club', 'equipo'],
     nivel: 'intermedio',
     categoria: 'biografia',
     cuerpo:
@@ -132,6 +153,7 @@ export const textos = [
   },
   {
     titulo: 'Manuel Belgrano y la bandera',
+    vocabulario: ['ejército', 'bandera', 'izar', 'orilla'],
     nivel: 'dificil',
     categoria: 'biografia',
     cuerpo:
@@ -173,6 +195,7 @@ export const textos = [
   },
   {
     titulo: 'El 25 de mayo de 1810',
+    vocabulario: ['cabildo', 'gobierno', 'junta', 'patria'],
     nivel: 'intermedio',
     categoria: 'historia',
     cuerpo:
@@ -214,6 +237,7 @@ export const textos = [
   },
   {
     titulo: 'El recreo de fútbol',
+    vocabulario: ['desventaja', 'mudarse', 'timbre', 'cancha', 'aplaudir', 'gol', 'equipo'],
     nivel: 'facil',
     categoria: 'deporte',
     cuerpo:
@@ -247,6 +271,7 @@ export const textos = [
   },
   {
     titulo: 'El viaje del agua',
+    vocabulario: ['vapor', 'nube', 'ciclo', 'río', 'mar', 'lluvia'],
     nivel: 'intermedio',
     categoria: 'ciencia',
     cuerpo:
@@ -284,6 +309,7 @@ export const textos = [
   },
   {
     titulo: 'Diego Maradona, el pibe de Villa Fiorito',
+    vocabulario: ['humilde', 'barrio', 'debutar', 'capitán', 'gambetear', 'rival', 'habilidad', 'club'],
     nivel: 'intermedio',
     categoria: 'biografia',
     cuerpo:
@@ -321,6 +347,7 @@ export const textos = [
   },
   {
     titulo: 'Mario Kempes, el goleador del Mundial 78',
+    vocabulario: ['provincia', 'goleador', 'torneo', 'campeón', 'mundial', 'apodo'],
     nivel: 'intermedio',
     categoria: 'biografia',
     cuerpo:
@@ -362,6 +389,7 @@ export const textos = [
   },
   {
     titulo: 'El Dibu Martínez, el arquero campeón',
+    vocabulario: ['arquero', 'penal', 'campeonato', 'atajar'],
     nivel: 'intermedio',
     categoria: 'biografia',
     cuerpo:
@@ -399,6 +427,7 @@ export const textos = [
   },
   {
     titulo: 'Ángel Di María, el fideo de Rosario',
+    vocabulario: ['medalla', 'olímpico', 'apodo', 'habilidad'],
     nivel: 'dificil',
     categoria: 'biografia',
     cuerpo:
@@ -436,6 +465,7 @@ export const textos = [
   },
   {
     titulo: 'Pelé, el rey del fútbol',
+    vocabulario: ['humilde', 'extraordinario', 'familia'],
     nivel: 'dificil',
     categoria: 'biografia',
     cuerpo:
@@ -475,35 +505,4 @@ export const textos = [
       },
     ],
   },
-]
-
-export const definiciones = [
-  ['paraguas', 'Objeto que se abre sobre la cabeza para no mojarse cuando llueve.'],
-  ['huerto', 'Lugar donde se plantan verduras y frutas para comer.'],
-  ['sembrar', 'Poner semillas en la tierra para que crezcan plantas.'],
-  ['cosechar', 'Juntar las verduras o frutas cuando ya están maduras.'],
-  ['paciencia', 'Saber esperar con calma, sin enojarse ni apurarse.'],
-  ['generoso', 'Persona que comparte lo que tiene con los demás.'],
-  ['vecino', 'Persona que vive cerca de nuestra casa.'],
-  ['ventana', 'Abertura de una pared por donde entra la luz y se puede mirar afuera.'],
-  ['cola', 'Parte de atrás del cuerpo de algunos animales, como el gato o el perro.'],
-  ['regar', 'Echar agua a las plantas para que no se sequen.'],
-  ['abrigo', 'Prenda de ropa que nos protege del frío.'],
-  ['quieto', 'Que no se mueve.'],
-  ['cabildo', 'Edificio donde antes se reunían las autoridades de una ciudad.'],
-  ['bandera', 'Tela con colores que representa a un país.'],
-  ['selección', 'Equipo formado por los mejores jugadores de un país.'],
-  ['barrio', 'Cada una de las zonas en que se divide una ciudad.'],
-  ['festejar', 'Celebrar algo con alegría.'],
-  ['vapor', 'El agua cuando está muy caliente y se convierte en gas.'],
-  ['nube', 'Masa blanca o gris de vapor de agua que flota en el cielo.'],
-  ['ejército', 'Grupo de soldados de un país.'],
-  ['arquero', 'Jugador que cuida el arco y ataja la pelota para que no entre.'],
-  ['penal', 'Tiro al arco que se patea de cerca, como castigo por una falta.'],
-  ['goleador', 'Jugador que hace muchos goles.'],
-  ['capitán', 'Jugador que lidera al equipo dentro de la cancha.'],
-  ['campeón', 'Quien gana una competencia.'],
-  ['medalla', 'Premio con forma de moneda que se cuelga del cuello.'],
-  ['gambetear', 'Esquivar a un rival con la pelota en los pies.'],
-  ['humilde', 'Que tiene pocos recursos o que no presume de lo que tiene.'],
 ]

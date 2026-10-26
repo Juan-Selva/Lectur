@@ -4,6 +4,8 @@ import { autenticar, requiereRol } from '../middleware/auth.js'
 import { badRequest, conflict, notFound } from '../lib/errors.js'
 import { calcularResultado } from '../lib/semaforo.js'
 import { parsear } from '../lib/validar.js'
+import { nuevoHito } from '../lib/racha.js'
+import { rachaDe } from '../lib/rachas.js'
 
 const completarSchema = z.object({
   respuestas: z
@@ -116,12 +118,17 @@ export function alumnoRouter({ pool }) {
     const a = await propia(Number(req.params.id), req.usuario.id)
     if (a.estado === 'completada') throw conflict('Esta actividad ya está completada')
     const { respuestas } = parsear(completarSchema, req.body)
+    const antes = await rachaDe(pool, req.usuario.id)
+    const conRacha = async (cuerpo) => {
+      const despues = await rachaDe(pool, req.usuario.id)
+      return { ...cuerpo, racha: { actual: despues.actual, nuevoHito: nuevoHito(antes, despues) } }
+    }
 
     if (!a.con_cuestionario) {
       await pool.query(`UPDATE asignaciones SET estado = 'completada', completada_en = now() WHERE id = $1`, [
         a.id,
       ])
-      return res.json({ completada: true, aciertos: null })
+      return res.json(await conRacha({ completada: true, aciertos: null }))
     }
 
     const { rows: preguntas } = await pool.query(
@@ -166,7 +173,7 @@ export function alumnoRouter({ pool }) {
     } finally {
       client.release()
     }
-    res.json({ completada: true, aciertos: { correctas: res_.correctas, total: res_.total } })
+    res.json(await conRacha({ completada: true, aciertos: { correctas: res_.correctas, total: res_.total } }))
   })
 
   return r

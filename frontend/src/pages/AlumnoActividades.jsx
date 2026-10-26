@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Categoria, Cargando, Mensaje, Tarjeta } from '../components/ui.jsx'
+import { TarjetaRacha } from '../components/Racha.jsx'
 import { api } from '../lib/api.js'
 
 export default function AlumnoActividades() {
   const [items, setItems] = useState(null)
+  const [racha, setRacha] = useState(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -12,6 +14,10 @@ export default function AlumnoActividades() {
       .actividades()
       .then((r) => setItems(r.actividades))
       .catch((e) => setError(e.message))
+    api
+      .racha()
+      .then(setRacha)
+      .catch(() => {})
   }, [])
 
   if (error) return <Mensaje>{error}</Mensaje>
@@ -22,7 +28,16 @@ export default function AlumnoActividades() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Mis lecturas</h1>
+      {racha && <TarjetaRacha racha={racha} />}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold">Mis lecturas</h1>
+        <Link
+          to="/alumno/practica"
+          className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50"
+        >
+          Practicar con más textos
+        </Link>
+      </div>
       <section className="space-y-3" aria-label="Pendientes">
         {pendientes.length === 0 && (
           <Tarjeta className="text-slate-600">No tenés lecturas pendientes. ¡Buen trabajo!</Tarjeta>

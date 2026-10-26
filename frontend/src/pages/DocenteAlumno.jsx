@@ -2,8 +2,11 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Boton, Campo, Categoria, Cargando, Mensaje, Modal, Tarjeta } from '../components/ui.jsx'
 import { api } from '../lib/api.js'
+import { InsigniaRacha } from '../components/Racha.jsx'
+import { useCursos } from '../lib/cursos.jsx'
 import { fechaCorta } from '../lib/fechas.js'
 import { estadoInfo } from '../lib/semaforo.js'
+import { descargarInformePdf } from '../lib/informePdf.js'
 
 function Detalle({ resultado }) {
   const info = estadoInfo(resultado.estado)
@@ -90,7 +93,6 @@ function Historial({ alumnoId }) {
   const [abierto, setAbierto] = useState(null)
   const [reasignando, setReasignando] = useState(null)
   const [error, setError] = useState('')
-
   const cargar = useCallback(() => {
     Promise.all([api.historialAlumno(alumnoId), api.semaforo()])
       .then(([h, s]) => {
@@ -184,6 +186,43 @@ function Historial({ alumnoId }) {
   )
 }
 
+function LecturasLibres({ alumnoId }) {
+  const [lista, setLista] = useState(null)
+  const [error, setError] = useState('')
+  useEffect(() => {
+    api
+      .practicasAlumno(alumnoId)
+      .then((r) => setLista(r.practicas))
+      .catch((e) => setError(e.message))
+  }, [alumnoId])
+  if (!lista) return error ? <Mensaje>{error}</Mensaje> : <Cargando />
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-slate-600">
+        Textos que el alumno eligió leer por su cuenta. No entran en el semáforo, pero muestran su
+        interés por leer.
+      </p>
+      {lista.length === 0 && (
+        <Tarjeta className="text-slate-600">Todavía no eligió ninguna lectura libre.</Tarjeta>
+      )}
+      {lista.map((p) => (
+        <Tarjeta key={p.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
+          <div className="space-y-1">
+            <p className="font-semibold">{p.titulo}</p>
+            <div className="flex items-center gap-2 text-sm text-slate-500">
+              <Categoria valor={p.categoria} />
+              {fechaCorta(p.fecha)}
+            </div>
+          </div>
+          <span className="text-sm text-slate-600">
+            {p.aciertos ? `${p.aciertos.correctas}/${p.aciertos.total} correctas` : 'Solo lectura'}
+          </span>
+        </Tarjeta>
+      ))}
+    </div>
+  )
+}
+
 function Palabras({ alumnoId }) {
   const [palabras, setPalabras] = useState(null)
   const [error, setError] = useState('')
@@ -224,10 +263,11 @@ function Palabras({ alumnoId }) {
 
 function Datos({ alumno, onGuardado }) {
   const navigate = useNavigate()
+  const { cursos, recargar } = useCursos()
   const [f, setF] = useState({
     nombre: alumno.nombre,
     email: alumno.email,
-    grado: String(alumno.grado),
+    cursoId: alumno.cursoId ? String(alumno.cursoId) : '',
   })
   const [pass, setPass] = useState('')
   const [msg, setMsg] = useState({ tipo: 'ok', texto: '' })
@@ -237,7 +277,12 @@ function Datos({ alumno, onGuardado }) {
   async function guardar(e) {
     e.preventDefault()
     try {
-      await api.editarAlumno(alumno.id, { ...f, grado: Number(f.grado) })
+      await api.editarAlumno(alumno.id, {
+        nombre: f.nombre,
+        email: f.email,
+        ...(f.cursoId ? { cursoId: Number(f.cursoId) } : { grado: Number(alumno.grado) }),
+      })
+      recargar()
       avisar('ok', 'Datos guardados.')
       onGuardado()
     } catch (err) {
@@ -269,6 +314,21 @@ function Datos({ alumno, onGuardado }) {
     }
   }
 
+  async function borrarDatos() {
+    if (
+      !window.confirm(
+        `¿Borrar los datos de lectura de ${alumno.nombre}? Se borran sus actividades, resultados, lecturas libres, notas y palabras consultadas. La cuenta se mantiene. No se puede deshacer.`,
+      )
+    )
+      return
+    try {
+      await api.borrarDatosAlumno(alumno.id)
+      avisar('ok', 'Se borraron los datos de lectura.')
+    } catch (err) {
+      avisar('error', err.message)
+    }
+  }
+
   return (
     <div className="space-y-4">
       <Mensaje tipo={msg.tipo}>{msg.texto}</Mensaje>
@@ -291,15 +351,17 @@ function Datos({ alumno, onGuardado }) {
             onChange={set('email')}
           />
           <label className="block text-sm font-medium">
-            Grado
+            Curso
             <select
-              value={f.grado}
-              onChange={set('grado')}
+              value={f.cursoId}
+              onChange={set('cursoId')}
+              required
               className="mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5"
             >
-              {[1, 2, 3].map((g) => (
-                <option key={g} value={g}>
-                  {g}° grado
+              <option value="">Elegí un curso…</option>
+              {cursos.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nombre}
                 </option>
               ))}
             </select>
@@ -325,6 +387,16 @@ function Datos({ alumno, onGuardado }) {
         </form>
       </Tarjeta>
       <Tarjeta className="space-y-2 border-red-200">
+        <h3 className="font-bold text-danger">Borrar datos de lectura</h3>
+        <p className="text-sm text-slate-600">
+          Borra sus actividades, resultados, lecturas libres, notas y palabras consultadas, y deja
+          la cuenta activa. Sirve, por ejemplo, para empezar de cero o ante un pedido de la familia.
+        </p>
+        <Boton variante="peligro" onClick={borrarDatos}>
+          Borrar datos de lectura
+        </Boton>
+      </Tarjeta>
+      <Tarjeta className="space-y-2 border-red-200">
         <h3 className="font-bold text-danger">Eliminar alumno</h3>
         <p className="text-sm text-slate-600">
           Se borran también sus lecturas, resultados, notas y palabras consultadas.
@@ -339,6 +411,7 @@ function Datos({ alumno, onGuardado }) {
 
 const TABS = [
   ['historial', 'Historial'],
+  ['libres', 'Lecturas libres'],
   ['palabras', 'Palabras consultadas'],
   ['datos', 'Datos'],
 ]
@@ -346,8 +419,22 @@ const TABS = [
 export default function DocenteAlumno() {
   const { id } = useParams()
   const [alumno, setAlumno] = useState(null)
+  const [racha, setRacha] = useState(null)
   const [tab, setTab] = useState('historial')
   const [error, setError] = useState('')
+
+  const [descargando, setDescargando] = useState(false)
+
+  async function descargarInforme() {
+    setDescargando(true)
+    try {
+      await descargarInformePdf(await api.resumen(id))
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setDescargando(false)
+    }
+  }
 
   const cargar = useCallback(() => {
     api
@@ -356,6 +443,12 @@ export default function DocenteAlumno() {
       .catch((e) => setError(e.message))
   }, [id])
   useEffect(cargar, [cargar])
+  useEffect(() => {
+    api
+      .rachaAlumno(id)
+      .then(setRacha)
+      .catch(() => {})
+  }, [id])
 
   if (error) return <Mensaje>{error}</Mensaje>
   if (!alumno) return <Cargando />
@@ -369,15 +462,26 @@ export default function DocenteAlumno() {
         <div>
           <h1 className="text-2xl font-bold">{alumno.nombre}</h1>
           <p className="text-slate-600">
+            {alumno.curso ? `${alumno.curso} · ` : ''}
             {alumno.grado}° grado · {alumno.email}
           </p>
+          <InsigniaRacha racha={racha} />
         </div>
-        <Link
-          to={`/docente/alumnos/${id}/resumen`}
-          className="rounded-xl bg-gold px-4 py-2.5 text-sm font-bold text-ink hover:brightness-95"
-        >
-          Resumen para la familia
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            to={`/docente/alumnos/${id}/resumen`}
+            className="rounded-xl bg-gold px-4 py-2.5 text-sm font-bold text-ink hover:brightness-95"
+          >
+            Resumen para la familia
+          </Link>
+          <button
+            onClick={descargarInforme}
+            disabled={descargando}
+            className="rounded-xl border border-brand px-4 py-2.5 text-sm font-bold text-brand hover:bg-brand-soft disabled:opacity-60"
+          >
+            {descargando ? 'Generando…' : 'Descargar PDF'}
+          </button>
+        </div>
       </div>
       <div className="flex gap-1 border-b border-slate-200" role="tablist">
         {TABS.map(([k, e]) => (
@@ -393,6 +497,7 @@ export default function DocenteAlumno() {
         ))}
       </div>
       {tab === 'historial' && <Historial alumnoId={id} />}
+      {tab === 'libres' && <LecturasLibres alumnoId={id} />}
       {tab === 'palabras' && <Palabras alumnoId={id} />}
       {tab === 'datos' && <Datos alumno={alumno} onGuardado={cargar} />}
     </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import logo from '../assets/logo.png'
 import { Boton, Campo, Mensaje, Tarjeta } from '../components/ui.jsx'
 import { useAuth } from '../lib/auth.jsx'
@@ -57,6 +57,15 @@ export default function Login() {
             {enviando ? 'Ingresando…' : 'Ingresar'}
           </Boton>
         </form>
+        <p className="text-center text-xs text-slate-500">
+          <Link to="/privacidad" className="hover:underline">
+            Privacidad
+          </Link>{' '}
+          ·{' '}
+          <Link to="/terminos" className="hover:underline">
+            Términos de uso
+          </Link>
+        </p>
       </Tarjeta>
     </div>
   )

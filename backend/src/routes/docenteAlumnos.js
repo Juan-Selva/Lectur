@@ -6,11 +6,14 @@ import { badRequest, conflict, notFound } from '../lib/errors.js'
 import { estadoPorPuntaje } from '../lib/semaforo.js'
 import { armarObservaciones } from '../lib/resumen.js'
 import { parsear } from '../lib/validar.js'
+import { rachaDe } from '../lib/rachas.js'
+import { cursoDelDocente, filtroCurso, resolverCursoYGrado } from '../lib/cursos.js'
 
 const editarSchema = z.object({
   nombre: z.string().trim().min(2).max(80),
   email: z.string().email().max(120),
-  grado: z.number().int().min(1).max(3),
+  cursoId: z.number().int().positive().optional(),
+  grado: z.number().int().min(1).max(3).optional(),
 })
 const passwordSchema = z.object({ password: z.string().min(8).max(100) })
 const reasignarSchema = z
@@ -29,7 +32,9 @@ export function docenteAlumnosRouter({ pool }) {
 
   async function alumnoDelDocente(id, docenteId) {
     const { rows } = await pool.query(
-      `SELECT id, nombre, email, grado FROM usuarios WHERE id = $1 AND rol = 'alumno' AND docente_id = $2`,
+      `SELECT u.id, u.nombre, u.email, u.grado, u.curso_id AS "cursoId", c.nombre AS curso
+         FROM usuarios u LEFT JOIN cursos c ON c.id = u.curso_id
+        WHERE u.id = $1 AND u.rol = 'alumno' AND u.docente_id = $2`,
       [id, docenteId],
     )
     if (!rows[0]) throw notFound('Alumno no encontrado')
@@ -43,10 +48,14 @@ export function docenteAlumnosRouter({ pool }) {
   r.put('/alumnos/:id', async (req, res) => {
     const a = await alumnoDelDocente(Number(req.params.id), req.usuario.id)
     const d = parsear(editarSchema, req.body)
+    // Sin cursoId se conserva el curso actual; con cursoId, el grado sale del curso.
+    const destino = d.cursoId !== undefined ? d : a.cursoId ? { cursoId: a.cursoId } : { grado: d.grado }
+    const { cursoId, grado } = await resolverCursoYGrado(pool, req.usuario.id, destino)
     try {
       const { rows } = await pool.query(
-        'UPDATE usuarios SET nombre = $1, email = $2, grado = $3 WHERE id = $4 RETURNING id, nombre, email, grado',
-        [d.nombre, d.email.toLowerCase(), d.grado, a.id],
+        `UPDATE usuarios SET nombre = $1, email = $2, grado = $3, curso_id = $4 WHERE id = $5
+         RETURNING id, nombre, email, grado, curso_id AS "cursoId"`,
+        [d.nombre, d.email.toLowerCase(), String(grado), cursoId, a.id],
       )
       res.json({ alumno: rows[0] })
     } catch (e) {
@@ -69,6 +78,26 @@ export function docenteAlumnosRouter({ pool }) {
   r.delete('/alumnos/:id', async (req, res) => {
     const a = await alumnoDelDocente(Number(req.params.id), req.usuario.id)
     await pool.query('DELETE FROM usuarios WHERE id = $1', [a.id])
+    res.status(204).end()
+  })
+
+  // Borra solo los datos de lectura del alumno (actividades, resultados, prácticas, consultas, notas y alertas)
+  // y conserva su cuenta.
+  r.delete('/alumnos/:id/datos', async (req, res) => {
+    const a = await alumnoDelDocente(Number(req.params.id), req.usuario.id)
+    const cliente = await pool.connect()
+    try {
+      await cliente.query('BEGIN')
+      for (const tabla of ['asignaciones', 'practicas', 'consultas', 'notas', 'alertas_vistas']) {
+        await cliente.query(`DELETE FROM ${tabla} WHERE alumno_id = $1`, [a.id])
+      }
+      await cliente.query('COMMIT')
+    } catch (e) {
+      await cliente.query('ROLLBACK')
+      throw e
+    } finally {
+      cliente.release()
+    }
     res.status(204).end()
   })
 
@@ -148,14 +177,41 @@ export function docenteAlumnosRouter({ pool }) {
 
   // Palabras más consultadas por todo el curso.
   r.get('/palabras', async (req, res) => {
+    const cursoId = filtroCurso(req.query)
+    if (cursoId) await cursoDelDocente(pool, cursoId, req.usuario.id)
     const { rows } = await pool.query(
       `SELECT min(c.palabra) AS palabra, count(*)::int AS veces, count(DISTINCT c.alumno_id)::int AS alumnos
          FROM consultas c JOIN usuarios u ON u.id = c.alumno_id
-        WHERE u.docente_id = $1
+        WHERE u.docente_id = $1 AND ($2::int IS NULL OR u.curso_id = $2)
         GROUP BY c.palabra_norm ORDER BY veces DESC, alumnos DESC LIMIT 20`,
-      [req.usuario.id],
+      [req.usuario.id, cursoId],
     )
     res.json({ palabras: rows })
+  })
+
+  r.get('/alumnos/:id/racha', async (req, res) => {
+    const a = await alumnoDelDocente(Number(req.params.id), req.usuario.id)
+    res.json(await rachaDe(pool, a.id))
+  })
+
+  // Lecturas libres: las que el alumno eligió por su cuenta (no entran en el semáforo).
+  r.get('/alumnos/:id/practicas', async (req, res) => {
+    const a = await alumnoDelDocente(Number(req.params.id), req.usuario.id)
+    const { rows } = await pool.query(
+      `SELECT p.id, t.titulo, t.categoria, p.completada_en, p.correctas, p.total
+         FROM practicas p JOIN textos t ON t.id = p.texto_id
+        WHERE p.alumno_id = $1 ORDER BY p.completada_en DESC LIMIT 100`,
+      [a.id],
+    )
+    res.json({
+      practicas: rows.map((p) => ({
+        id: p.id,
+        titulo: p.titulo,
+        categoria: p.categoria,
+        fecha: p.completada_en,
+        aciertos: p.correctas === null ? null : { correctas: p.correctas, total: p.total },
+      })),
+    })
   })
 
   r.get('/alumnos/:id/resumen', async (req, res) => {
@@ -190,6 +246,10 @@ export function docenteAlumnosRouter({ pool }) {
     }
 
     const palabras = await palabrasDe(a.id)
+    const practicas = (
+      await pool.query('SELECT count(*)::int AS n FROM practicas WHERE alumno_id = $1', [a.id])
+    ).rows[0].n
+    const racha = await rachaDe(pool, a.id)
     const nota = (
       await pool.query('SELECT texto FROM notas WHERE alumno_id = $1 AND docente_id = $2', [
         a.id,
@@ -205,6 +265,8 @@ export function docenteAlumnosRouter({ pool }) {
       docente: req.usuario.nombre,
       fecha: new Date().toISOString(),
       lecturas: hechas.length,
+      practicas,
+      racha: { actual: racha.actual, mejor: racha.mejor },
       conCuestionario: conResultado.length,
       promedio,
       estado: conResultado.length ? estadoPorPuntaje(conResultado[0].puntaje) : null,

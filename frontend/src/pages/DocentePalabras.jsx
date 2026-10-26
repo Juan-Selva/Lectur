@@ -1,17 +1,19 @@
 import { useEffect, useState } from 'react'
 import { Cargando, Mensaje, Tarjeta } from '../components/ui.jsx'
 import { api } from '../lib/api.js'
+import { useCursos } from '../lib/cursos.jsx'
 
 export default function DocentePalabras() {
   const [palabras, setPalabras] = useState(null)
   const [error, setError] = useState('')
+  const { cursoId } = useCursos()
 
   useEffect(() => {
     api
-      .palabrasCurso()
+      .palabrasCurso(cursoId)
       .then((r) => setPalabras(r.palabras))
       .catch((e) => setError(e.message))
-  }, [])
+  }, [cursoId])
 
   if (!palabras) return error ? <Mensaje>{error}</Mensaje> : <Cargando />
 
