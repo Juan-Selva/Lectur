@@ -19,7 +19,7 @@ export function alumnoRouter({ pool }) {
 
   async function propia(id, alumnoId) {
     const { rows } = await pool.query(
-      `SELECT a.*, t.titulo, t.cuerpo FROM asignaciones a JOIN textos t ON t.id = a.texto_id
+      `SELECT a.*, t.titulo, t.cuerpo, t.categoria FROM asignaciones a JOIN textos t ON t.id = a.texto_id
         WHERE a.id = $1 AND a.alumno_id = $2 AND a.estado <> 'cancelada'`,
       [id, alumnoId],
     )
@@ -107,6 +107,7 @@ export function alumnoRouter({ pool }) {
         id: a.id,
         titulo: a.titulo,
         cuerpo: a.cuerpo,
+        categoria: a.categoria,
         conCuestionario: a.con_cuestionario,
         estado: a.estado,
       },

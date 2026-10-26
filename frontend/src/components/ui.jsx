@@ -1,9 +1,9 @@
 import { useEffect } from 'react'
-import { etiquetaCategoria } from '../lib/categorias.js'
+import { categoria } from '../lib/categorias.js'
 
 export function Boton({ variante = 'primario', className = '', ...props }) {
   const base =
-    'inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/40'
+    'boton inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/40'
   const v = {
     primario: 'bg-brand text-white hover:bg-brand-dark',
     dorado: 'bg-gold text-ink hover:brightness-95',
@@ -16,7 +16,7 @@ export function Boton({ variante = 'primario', className = '', ...props }) {
 export function Tarjeta({ className = '', ...props }) {
   return (
     <div
-      className={`rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ${className}`}
+      className={`tarjeta rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ${className}`}
       {...props}
     />
   )
@@ -49,7 +49,22 @@ export const Mensaje = ({ tipo = 'error', children }) =>
     </p>
   ) : null
 
-export const Cargando = () => <p className="py-10 text-center text-slate-500">Cargando…</p>
+const PUNTOS = ['bg-sky-400', 'bg-amber-400', 'bg-pink-400']
+
+export const Cargando = () => (
+  <div role="status" className="flex flex-col items-center gap-3 py-12 text-slate-500">
+    <div className="flex gap-2" aria-hidden="true">
+      {PUNTOS.map((c, i) => (
+        <span
+          key={c}
+          className={`size-3.5 animate-bounce rounded-full ${c}`}
+          style={{ animationDelay: `${i * 0.15}s` }}
+        />
+      ))}
+    </div>
+    Cargando…
+  </div>
+)
 
 export function Modal({ titulo, onCerrar, children }) {
   useEffect(() => {
@@ -77,10 +92,13 @@ export function Modal({ titulo, onCerrar, children }) {
 }
 
 export function Categoria({ valor }) {
-  const etiqueta = etiquetaCategoria(valor)
-  return etiqueta ? (
-    <span className="rounded-full bg-brand-soft px-2.5 py-0.5 text-xs font-semibold text-brand-dark">
-      {etiqueta}
+  const c = categoria(valor)
+  return c ? (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${c.chip}`}
+    >
+      <span aria-hidden="true">{c.emoji}</span>
+      {c.etiqueta}
     </span>
   ) : null
 }

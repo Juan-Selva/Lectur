@@ -2,6 +2,7 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import Campanita from './Campanita.jsx'
 import AjustesLectura from './AjustesLectura.jsx'
 import SelectorCurso from './SelectorCurso.jsx'
+import LayoutAlumno from './LayoutAlumno.jsx'
 import logo from '../assets/logo.png'
 import { useAuth } from '../lib/auth.jsx'
 
@@ -18,49 +19,31 @@ export default function Layout() {
     '/docente/palabras',
     '/docente/alertas',
   ].includes(pathname)
+  if (!esDocente) return <LayoutAlumno />
   return (
     <div className="min-h-screen">
       <header className="border-b border-slate-200 bg-white print:hidden">
         <div className="mx-auto flex max-w-4xl flex-wrap items-center gap-3 px-4 py-3">
           <img src={logo} alt="Lectur" className="h-9 w-auto" />
           <nav className="flex gap-1" aria-label="Principal">
-            {esDocente ? (
-              <>
-                <NavLink to="/docente" end className={link}>
-                  Semáforo
-                </NavLink>
-                <NavLink to="/docente/asignar" className={link}>
-                  Asignar
-                </NavLink>
-                <NavLink to="/docente/palabras" className={link}>
-                  Palabras
-                </NavLink>
-                <NavLink to="/docente/cursos" className={link}>
-                  Cursos
-                </NavLink>
-                <NavLink to="/docente/textos" className={link}>
-                  Textos
-                </NavLink>
-              </>
-            ) : (
-              <>
-                <NavLink to="/alumno" end className={link}>
-                  Mis lecturas
-                </NavLink>
-                <NavLink to="/alumno/practica" className={link}>
-                  Practicar
-                </NavLink>
-                <NavLink to="/alumno/historial" className={link}>
-                  Historial
-                </NavLink>
-                <NavLink to="/alumno/diccionario" className={link}>
-                  Diccionario
-                </NavLink>
-              </>
-            )}
+            <NavLink to="/docente" end className={link}>
+              Semáforo
+            </NavLink>
+            <NavLink to="/docente/asignar" className={link}>
+              Asignar
+            </NavLink>
+            <NavLink to="/docente/palabras" className={link}>
+              Palabras
+            </NavLink>
+            <NavLink to="/docente/cursos" className={link}>
+              Cursos
+            </NavLink>
+            <NavLink to="/docente/textos" className={link}>
+              Textos
+            </NavLink>
           </nav>
           <div className="ml-auto flex items-center gap-3 text-sm">
-            {esDocente && <Campanita />}
+            <Campanita />
             <AjustesLectura compacto />
             <span className="hidden text-slate-600 sm:inline">{usuario.nombre}</span>
             <button onClick={salir} className="font-semibold text-brand hover:underline">
@@ -71,7 +54,7 @@ export default function Layout() {
         <div className="h-1 bg-gold" />
       </header>
       <main className="mx-auto max-w-4xl px-4 py-6">
-        {esDocente && filtrable && (
+        {filtrable && (
           <div className="mb-4 flex justify-end">
             <SelectorCurso />
           </div>
