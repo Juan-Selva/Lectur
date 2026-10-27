@@ -35,6 +35,11 @@ function TarjetaTexto({ t, i }) {
               <span aria-hidden="true">{nivel.emoji}</span> {nivel.texto}
             </span>
           )}
+          {t.grado && (
+            <span className="rounded-full bg-slate-100 px-2.5 py-0.5">
+              <span aria-hidden="true">🎒</span> {t.grado}.º grado
+            </span>
+          )}
           {t.cantidadPreguntas > 0 && (
             <span className="rounded-full bg-slate-100 px-2.5 py-0.5">
               <span aria-hidden="true">❓</span> con preguntas

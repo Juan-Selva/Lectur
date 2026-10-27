@@ -24,6 +24,17 @@ export function cursosRouter({ pool }) {
     res.json({ cursos: rows })
   })
 
+  // Alumnos de un curso (nombre y email), para consultarlos desde la pantalla de cursos.
+  r.get('/:id/alumnos', async (req, res) => {
+    const curso = await cursoDelDocente(pool, Number(req.params.id), req.usuario.id)
+    const { rows } = await pool.query(
+      `SELECT id, nombre, email, grado FROM usuarios
+        WHERE rol = 'alumno' AND docente_id = $1 AND curso_id = $2 ORDER BY nombre`,
+      [req.usuario.id, curso.id],
+    )
+    res.json({ curso: { id: curso.id, nombre: curso.nombre, grado: curso.grado }, alumnos: rows })
+  })
+
   r.post('/', async (req, res) => {
     const d = parsear(cursoSchema, req.body)
     try {

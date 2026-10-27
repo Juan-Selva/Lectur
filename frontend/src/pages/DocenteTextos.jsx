@@ -2,18 +2,32 @@ import { useCallback, useEffect, useState } from 'react'
 import { Boton, Campo, Categoria, Cargando, Mensaje, Tarjeta } from '../components/ui.jsx'
 import { api } from '../lib/api.js'
 import { CATEGORIAS } from '../lib/categorias.js'
+import { GRADOS, etiquetaGrado, gradoDeSelect, textosDeGrado } from '../lib/grados.js'
+import { HABILIDADES } from '../lib/habilidades.js'
+import { MAX_ELEMENTOS, MIN_ELEMENTOS } from '../lib/preguntas.js'
+import FiltroGrado from '../components/FiltroGrado.jsx'
+import VistaTexto from '../components/VistaTexto.jsx'
 
-const preguntaVacia = () => ({ enunciado: '', tipo: 'literal', opciones: ['', ''], correcta: 0 })
+const preguntaVacia = () => ({
+  enunciado: '',
+  habilidad: 'dato_explicito',
+  formato: 'opcion',
+  opciones: ['', ''],
+  correcta: 0,
+})
 
 function Formulario({ inicial, onGuardado, onCancelar }) {
   const editando = Boolean(inicial)
   const [titulo, setTitulo] = useState(inicial?.texto.titulo ?? '')
   const [cuerpo, setCuerpo] = useState(inicial?.texto.cuerpo ?? '')
+  const [autor, setAutor] = useState(inicial?.texto.autor ?? '')
   const [categoria, setCategoria] = useState(inicial?.texto.categoria ?? '')
+  const [grado, setGrado] = useState(inicial?.texto.grado ? String(inicial.texto.grado) : '')
   const [preguntas, setPreguntas] = useState(
-    (inicial?.preguntas ?? []).map(({ enunciado, tipo, opciones, correcta }) => ({
+    (inicial?.preguntas ?? []).map(({ enunciado, habilidad, formato, opciones, correcta }) => ({
       enunciado,
-      tipo,
+      habilidad,
+      formato: formato ?? 'opcion',
       opciones,
       correcta,
     })),
@@ -24,11 +38,46 @@ function Formulario({ inicial, onGuardado, onCancelar }) {
     setPreguntas((ps) => ps.map((p, k) => (k === i ? { ...p, ...parche } : p)))
   const cambiarOpcion = (i, j, v) =>
     cambiar(i, { opciones: preguntas[i].opciones.map((o, k) => (k === j ? v : o)) })
+  // Al pasar a ordenar se sugiere la habilidad "estructura"; al volver a opción múltiple se ajustan las opciones.
+  const cambiarFormato = (i, formato) => {
+    const p = preguntas[i]
+    if (formato === 'orden') {
+      cambiar(i, {
+        formato,
+        habilidad: p.habilidad === 'dato_explicito' ? 'estructura' : p.habilidad,
+      })
+    } else {
+      const opciones = p.opciones.slice(0, 4)
+      cambiar(i, { formato, opciones, correcta: Math.min(p.correcta ?? 0, opciones.length - 1) })
+    }
+  }
 
   async function guardar(e) {
     e.preventDefault()
     setError('')
-    const datos = { titulo, cuerpo, preguntas, ...(categoria ? { categoria } : {}) }
+    const datos = {
+      titulo,
+      cuerpo,
+      autor: autor.trim() || null,
+      preguntas: preguntas.map((p) =>
+        p.formato === 'orden'
+          ? {
+              enunciado: p.enunciado,
+              habilidad: p.habilidad,
+              formato: 'orden',
+              opciones: p.opciones,
+            }
+          : {
+              enunciado: p.enunciado,
+              habilidad: p.habilidad,
+              formato: 'opcion',
+              opciones: p.opciones,
+              correcta: p.correcta,
+            },
+      ),
+      grado: gradoDeSelect(grado),
+      ...(categoria ? { categoria } : {}),
+    }
     try {
       if (editando) await api.editarTexto(inicial.texto.id, datos)
       else await api.crearTexto(datos)
@@ -49,6 +98,13 @@ function Formulario({ inicial, onGuardado, onCancelar }) {
           value={titulo}
           onChange={(e) => setTitulo(e.target.value)}
         />
+        <Campo
+          id="ta"
+          etiqueta="Autor (opcional)"
+          maxLength={120}
+          value={autor}
+          onChange={(e) => setAutor(e.target.value)}
+        />
         <label className="block text-sm font-medium">
           Categoría (opcional)
           <select
@@ -65,10 +121,25 @@ function Formulario({ inicial, onGuardado, onCancelar }) {
           </select>
         </label>
         <label className="block text-sm font-medium">
+          Grado
+          <select
+            value={grado}
+            onChange={(e) => setGrado(e.target.value)}
+            className="mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5"
+          >
+            <option value="">{etiquetaGrado(null)}</option>
+            {GRADOS.map((g) => (
+              <option key={g} value={g}>
+                {etiquetaGrado(g)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block text-sm font-medium">
           Texto
           <textarea
             required
-            minLength={20}
+            minLength={10}
             rows={6}
             value={cuerpo}
             onChange={(e) => setCuerpo(e.target.value)}
@@ -87,37 +158,80 @@ function Formulario({ inicial, onGuardado, onCancelar }) {
                 value={p.enunciado}
                 onChange={(e) => cambiar(i, { enunciado: e.target.value })}
               />
+              <p className="text-xs text-slate-500">
+                Tip: una palabra entre asteriscos, como *timbre*, se resalta en la pregunta.
+              </p>
               <select
-                aria-label="Tipo"
-                value={p.tipo}
-                onChange={(e) => cambiar(i, { tipo: e.target.value })}
+                aria-label="Formato de la pregunta"
+                value={p.formato}
+                onChange={(e) => cambiarFormato(i, e.target.value)}
+                className="mr-2 rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm"
+              >
+                <option value="opcion">Opción múltiple</option>
+                <option value="orden">Ordenar</option>
+              </select>
+              <select
+                aria-label="Habilidad que mide"
+                value={p.habilidad}
+                onChange={(e) => cambiar(i, { habilidad: e.target.value })}
                 className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm"
               >
-                <option value="literal">Literal</option>
-                <option value="inferencial">Inferencial</option>
+                {HABILIDADES.map((h) => (
+                  <option key={h.valor} value={h.valor}>
+                    {h.etiqueta}
+                  </option>
+                ))}
               </select>
               {p.opciones.map((o, j) => (
                 <div key={j} className="flex items-center gap-2">
+                  {p.formato === 'orden' ? (
+                    <span
+                      aria-hidden="true"
+                      className="w-4 text-center text-sm font-bold text-slate-500"
+                    >
+                      {j + 1}
+                    </span>
+                  ) : (
+                    <input
+                      type="radio"
+                      name={`c${i}`}
+                      aria-label={`Opción ${j + 1} correcta`}
+                      checked={p.correcta === j}
+                      onChange={() => cambiar(i, { correcta: j })}
+                      className="size-4 accent-success"
+                    />
+                  )}
                   <input
-                    type="radio"
-                    name={`c${i}`}
-                    aria-label={`Opción ${j + 1} correcta`}
-                    checked={p.correcta === j}
-                    onChange={() => cambiar(i, { correcta: j })}
-                    className="size-4 accent-success"
-                  />
-                  <input
-                    aria-label={`Opción ${j + 1}`}
+                    aria-label={p.formato === 'orden' ? `Elemento ${j + 1}` : `Opción ${j + 1}`}
                     required
                     value={o}
                     onChange={(e) => cambiarOpcion(i, j, e.target.value)}
-                    placeholder={`Opción ${j + 1}`}
+                    placeholder={p.formato === 'orden' ? `Elemento ${j + 1}` : `Opción ${j + 1}`}
                     className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm"
                   />
+                  {p.formato === 'orden' && p.opciones.length > MIN_ELEMENTOS && (
+                    <button
+                      type="button"
+                      aria-label={`Quitar elemento ${j + 1}`}
+                      className="font-semibold text-danger"
+                      onClick={() => cambiar(i, { opciones: p.opciones.filter((_, k) => k !== j) })}
+                    >
+                      ×
+                    </button>
+                  )}
                 </div>
               ))}
               <div className="flex gap-3 text-sm">
-                {p.opciones.length < 4 && (
+                {p.formato === 'orden' && p.opciones.length < MAX_ELEMENTOS && (
+                  <button
+                    type="button"
+                    className="font-semibold text-brand"
+                    onClick={() => cambiar(i, { opciones: [...p.opciones, ''] })}
+                  >
+                    + Elemento
+                  </button>
+                )}
+                {p.formato !== 'orden' && p.opciones.length < 4 && (
                   <button
                     type="button"
                     className="font-semibold text-brand"
@@ -134,7 +248,11 @@ function Formulario({ inicial, onGuardado, onCancelar }) {
                   Quitar pregunta
                 </button>
               </div>
-              <p className="text-xs text-slate-500">Marcá con el círculo la opción correcta.</p>
+              <p className="text-xs text-slate-500">
+                {p.formato === 'orden'
+                  ? 'Escribí los elementos en el orden correcto: el alumno los va a ver mezclados.'
+                  : 'Marcá con el círculo la opción correcta.'}
+              </p>
             </div>
           ))}
           {preguntas.length < 10 && (
@@ -164,7 +282,9 @@ export default function DocenteTextos() {
   const [textos, setTextos] = useState(null)
   const [error, setError] = useState('')
   const [form, setForm] = useState(null) // null | { inicial?: {...} }
+  const [ver, setVer] = useState(null) // null | { texto, preguntas }
   const [filtro, setFiltro] = useState('')
+  const [gradoFiltro, setGradoFiltro] = useState(null)
 
   const cargar = useCallback(() => {
     api
@@ -194,27 +314,62 @@ export default function DocenteTextos() {
     }
   }
 
+  async function abrir(id) {
+    setError('')
+    try {
+      setVer(await api.texto(id))
+    } catch (e) {
+      setError(e.message)
+    }
+  }
+  // Copia el texto a "Mis textos" y lo abre en el editor.
+  async function duplicar(id) {
+    setError('')
+    try {
+      const { id: nuevo } = await api.duplicarTexto(id)
+      setVer(null)
+      cargar()
+      await editar(nuevo)
+    } catch (e) {
+      setError(e.message)
+    }
+  }
+
   if (!textos) return error ? <Mensaje>{error}</Mensaje> : <Cargando />
-  const visibles = textos.filter((t) => !filtro || t.categoria === filtro)
+  const visibles = textosDeGrado(textos, gradoFiltro).filter(
+    (t) => !filtro || t.categoria === filtro,
+  )
   const fila = (t) => (
     <Tarjeta key={t.id} className="flex items-center justify-between gap-3 py-3">
       <div className="space-y-1">
         <p className="font-semibold">{t.titulo}</p>
         <div className="flex items-center gap-2 text-sm text-slate-500">
           <Categoria valor={t.categoria} />
+          <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-600">
+            {etiquetaGrado(t.grado)}
+          </span>
           {t.cantidad_preguntas} pregunta{t.cantidad_preguntas === 1 ? '' : 's'}
         </div>
       </div>
-      {t.propio && (
-        <div className="flex gap-2">
-          <Boton variante="suave" onClick={() => editar(t.id)}>
+      <div className="flex flex-wrap justify-end gap-2">
+        <Boton variante="suave" onClick={() => abrir(t.id)}>
+          Ver
+        </Boton>
+        {t.propio ? (
+          <>
+            <Boton variante="suave" onClick={() => editar(t.id)}>
+              Editar
+            </Boton>
+            <Boton variante="peligro" onClick={() => borrar(t.id)}>
+              Borrar
+            </Boton>
+          </>
+        ) : (
+          <Boton variante="suave" onClick={() => duplicar(t.id)}>
             Editar
           </Boton>
-          <Boton variante="peligro" onClick={() => borrar(t.id)}>
-            Borrar
-          </Boton>
-        </div>
-      )}
+        )}
+      </div>
     </Tarjeta>
   )
   const chip = (valor, etiqueta) => (
@@ -235,6 +390,13 @@ export default function DocenteTextos() {
         {!form && <Boton onClick={() => setForm({})}>+ Nuevo texto</Boton>}
       </div>
       <Mensaje>{error}</Mensaje>
+      {ver && (
+        <VistaTexto
+          datos={ver}
+          onCerrar={() => setVer(null)}
+          onDuplicar={ver.texto.propio ? undefined : () => duplicar(ver.texto.id)}
+        />
+      )}
       {form && (
         <Formulario
           key={form.inicial?.texto.id ?? 'nuevo'}
@@ -250,6 +412,7 @@ export default function DocenteTextos() {
         {chip('', 'Todas')}
         {CATEGORIAS.map((c) => chip(c.valor, c.etiqueta))}
       </div>
+      <FiltroGrado valor={gradoFiltro} onCambiar={setGradoFiltro} />
       <section className="space-y-2">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
           Mis textos (privados)

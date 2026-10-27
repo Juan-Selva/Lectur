@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Boton, Campo, Mensaje, Modal, Tarjeta } from '../components/ui.jsx'
 import { api } from '../lib/api.js'
 import { useCursos } from '../lib/cursos.jsx'
@@ -52,9 +53,59 @@ function ModalCurso({ curso, onCerrar, onListo }) {
   )
 }
 
+function ModalVerCurso({ curso, onCerrar }) {
+  const [datos, setDatos] = useState(null)
+  const [error, setError] = useState('')
+  useEffect(() => {
+    api
+      .alumnosCurso(curso.id)
+      .then(setDatos)
+      .catch((e) => setError(e.message))
+  }, [curso.id])
+  return (
+    <Modal titulo={`Curso ${curso.nombre}`} onCerrar={onCerrar}>
+      <div className="space-y-3">
+        <p className="text-sm text-slate-500">
+          {curso.grado}° grado · {curso.alumnos} alumno{curso.alumnos === 1 ? '' : 's'}
+        </p>
+        <Mensaje>{error}</Mensaje>
+        {!datos && !error && <p className="text-sm text-slate-500">Cargando…</p>}
+        {datos?.alumnos.length === 0 && (
+          <p className="text-sm text-slate-600">Este curso todavía no tiene alumnos.</p>
+        )}
+        {datos?.alumnos.length > 0 && (
+          <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200">
+            {datos.alumnos.map((a) => (
+              <li
+                key={a.id}
+                className="flex flex-wrap items-center justify-between gap-2 px-3 py-2"
+              >
+                <div>
+                  <p className="font-semibold">{a.nombre}</p>
+                  <p className="text-sm text-slate-500">{a.email}</p>
+                </div>
+                <Link
+                  to={`/docente/alumnos/${a.id}`}
+                  className="text-sm font-semibold text-brand hover:underline"
+                >
+                  Ver ficha
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="flex justify-end">
+          <Boton onClick={onCerrar}>Cerrar</Boton>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
 export default function DocenteCursos() {
   const { cursos, recargar } = useCursos()
   const [modal, setModal] = useState(null) // null | {} (nuevo) | { curso }
+  const [verCurso, setVerCurso] = useState(null) // null | curso
   const [error, setError] = useState('')
 
   async function borrar(c) {
@@ -91,6 +142,9 @@ export default function DocenteCursos() {
             </p>
           </div>
           <div className="flex gap-2">
+            <Boton variante="suave" onClick={() => setVerCurso(c)}>
+              Ver curso
+            </Boton>
             <Boton variante="suave" onClick={() => setModal({ curso: c })}>
               Editar
             </Boton>
@@ -100,6 +154,7 @@ export default function DocenteCursos() {
           </div>
         </Tarjeta>
       ))}
+      {verCurso && <ModalVerCurso curso={verCurso} onCerrar={() => setVerCurso(null)} />}
       {modal && (
         <ModalCurso
           curso={modal.curso}

@@ -20,6 +20,14 @@ export async function resolverCursoYGrado(pool, docenteId, { cursoId, grado }) {
   return { cursoId: null, grado }
 }
 
+// Parsea el filtro ?grado= (1, 2 o 3; null = todos los grados).
+export function filtroGrado(query) {
+  if (query.grado === undefined || query.grado === '') return null
+  const n = Number(query.grado)
+  if (![1, 2, 3].includes(n)) throw badRequest('grado inválido')
+  return n
+}
+
 // Parsea el filtro ?cursoId= de una consulta (null = todos los cursos).
 export function filtroCurso(query) {
   if (query.cursoId === undefined || query.cursoId === '') return null

@@ -1,8 +1,16 @@
 // Arma fortalezas y sugerencias para el resumen de familias a partir de datos reales.
 // Es una regla simple y explicable, no una evaluación diagnóstica.
+import { ETIQUETAS_HABILIDAD, FRASE_FAMILIA } from './habilidades.js'
+
 const UMBRAL = 0.7
 
-export function armarObservaciones({ literal, inferencial, palabrasConsultadas, lecturasConCuestionario }) {
+export function armarObservaciones({
+  literal,
+  inferencial,
+  palabrasConsultadas,
+  lecturasConCuestionario,
+  reforzar = null,
+}) {
   const fortalezas = []
   const sugerencias = []
 
@@ -30,6 +38,12 @@ export function armarObservaciones({ literal, inferencial, palabrasConsultadas, 
         'Conversar en casa sobre por qué pasan las cosas en los cuentos y qué sienten los personajes.',
       )
     }
+  }
+  if (reforzar) {
+    // La sugerencia de la habilidad que más cuesta va primero.
+    sugerencias.unshift(
+      `Para reforzar (${ETIQUETAS_HABILIDAD[reforzar.habilidad].toLowerCase()}): ${FRASE_FAMILIA[reforzar.habilidad]}`,
+    )
   }
   if (palabrasConsultadas >= 3) {
     fortalezas.push('Busca en el diccionario las palabras que no conoce.')

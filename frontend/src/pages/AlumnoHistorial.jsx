@@ -1,3 +1,4 @@
+import Enunciado from '../components/Enunciado.jsx'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Categoria, Cargando, Mensaje, Tarjeta } from '../components/ui.jsx'
@@ -150,7 +151,9 @@ export default function AlumnoHistorial() {
                             >
                               {p.acierto ? '✓' : '↻'}
                             </span>
-                            <span className="pt-0.5">{p.enunciado}</span>
+                            <span className="pt-0.5">
+                              <Enunciado texto={p.enunciado} />
+                            </span>
                           </li>
                         ))}
                       </ul>

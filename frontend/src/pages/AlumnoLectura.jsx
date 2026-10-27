@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Boton, Categoria, Cargando, Mensaje, Tarjeta } from '../components/ui.jsx'
 import AjustesLectura from '../components/AjustesLectura.jsx'
+import Enunciado from '../components/Enunciado.jsx'
+import PreguntaOrden from '../components/PreguntaOrden.jsx'
+import { armarRespuesta } from '../lib/preguntas.js'
 import DiccionarioRapido from '../components/DiccionarioRapido.jsx'
 import Mascota from '../components/Mascota.jsx'
 import { Confeti, Estrellas } from '../components/Festejo.jsx'
@@ -100,6 +103,7 @@ function Encabezado({ actividad }) {
         </span>
         <div className="space-y-1">
           <h1 className="text-2xl leading-tight sm:text-3xl">{actividad.titulo}</h1>
+          {actividad.autor && <p className="text-sm text-slate-600">Autor: {actividad.autor}</p>}
           <Categoria valor={actividad.categoria} />
         </div>
       </div>
@@ -190,6 +194,7 @@ export default function AlumnoLectura({ practica = false }) {
               titulo: d.texto.titulo,
               cuerpo: d.texto.cuerpo,
               categoria: d.texto.categoria,
+              autor: d.texto.autor,
               conCuestionario: d.preguntas.length > 0,
               estado: 'pendiente',
             },
@@ -291,43 +296,51 @@ export default function AlumnoLectura({ practica = false }) {
                   </span>
                   <span>
                     <span className="sr-only">{i + 1}. </span>
-                    {p.enunciado}
+                    <Enunciado texto={p.enunciado} />
                   </span>
                 </legend>
-                <div className="grid gap-2.5">
-                  {p.opciones.map((o, k) => {
-                    const elegida = respuestas[p.id] === k
-                    return (
-                      <label
-                        key={k}
-                        className={`lectura flex cursor-pointer items-center gap-3 rounded-2xl border-2 px-4 py-3 transition has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-brand/30 ${
-                          elegida
-                            ? 'border-brand bg-brand-soft shadow-[0_3px_0_rgb(8_117_201/0.35)]'
-                            : 'border-slate-200 hover:-translate-y-0.5 hover:border-sky-300 hover:bg-sky-50'
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name={`p${p.id}`}
-                          checked={elegida}
-                          onChange={() => setRespuestas({ ...respuestas, [p.id]: k })}
-                          className="sr-only"
-                        />
-                        <span
-                          aria-hidden="true"
-                          className={`flex size-9 shrink-0 items-center justify-center rounded-xl text-base font-extrabold text-white ${
+                {p.formato === 'orden' ? (
+                  <PreguntaOrden
+                    opciones={p.opciones}
+                    valor={respuestas[p.id]}
+                    onCambiar={(v) => setRespuestas({ ...respuestas, [p.id]: v })}
+                  />
+                ) : (
+                  <div className="grid gap-2.5">
+                    {p.opciones.map((o, k) => {
+                      const elegida = respuestas[p.id] === k
+                      return (
+                        <label
+                          key={k}
+                          className={`lectura flex cursor-pointer items-center gap-3 rounded-2xl border-2 px-4 py-3 transition has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-brand/30 ${
                             elegida
-                              ? 'animate-saltito bg-brand'
-                              : COLORES_LETRA[k % COLORES_LETRA.length]
+                              ? 'border-brand bg-brand-soft shadow-[0_3px_0_rgb(8_117_201/0.35)]'
+                              : 'border-slate-200 hover:-translate-y-0.5 hover:border-sky-300 hover:bg-sky-50'
                           }`}
                         >
-                          {elegida ? '✓' : LETRAS[k]}
-                        </span>
-                        {o}
-                      </label>
-                    )
-                  })}
-                </div>
+                          <input
+                            type="radio"
+                            name={`p${p.id}`}
+                            checked={elegida}
+                            onChange={() => setRespuestas({ ...respuestas, [p.id]: k })}
+                            className="sr-only"
+                          />
+                          <span
+                            aria-hidden="true"
+                            className={`flex size-9 shrink-0 items-center justify-center rounded-xl text-base font-extrabold text-white ${
+                              elegida
+                                ? 'animate-saltito bg-brand'
+                                : COLORES_LETRA[k % COLORES_LETRA.length]
+                            }`}
+                          >
+                            {elegida ? '✓' : LETRAS[k]}
+                          </span>
+                          {o}
+                        </label>
+                      )
+                    })}
+                  </div>
+                )}
               </fieldset>
             </Tarjeta>
           )
@@ -340,9 +353,7 @@ export default function AlumnoLectura({ practica = false }) {
           <Boton
             variante="dorado"
             disabled={!completo || enviando}
-            onClick={() =>
-              enviar(preguntas.map((p) => ({ preguntaId: p.id, opcion: respuestas[p.id] })))
-            }
+            onClick={() => enviar(preguntas.map((p) => armarRespuesta(p, respuestas[p.id])))}
           >
             {enviando ? 'Enviando…' : '¡Terminar! 🏁'}
           </Boton>

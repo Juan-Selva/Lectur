@@ -4,18 +4,24 @@ import { Boton, Cargando, Mensaje, Tarjeta } from '../components/ui.jsx'
 import { api } from '../lib/api.js'
 import { useCursos } from '../lib/cursos.jsx'
 import { CATEGORIAS } from '../lib/categorias.js'
+import { textosDeGrado } from '../lib/grados.js'
+import FiltroGrado from '../components/FiltroGrado.jsx'
 
 export default function DocenteAsignar() {
   const [textos, setTextos] = useState(null)
   const [alumnos, setAlumnos] = useState(null)
   const [textoId, setTextoId] = useState('')
   const [categoria, setCategoria] = useState('')
+  const [gradoElegido, setGradoElegido] = useState(undefined) // undefined = todavía sin tocar
   const [sel, setSel] = useState([])
   const [conCuestionario, setCon] = useState(true)
   const [error, setError] = useState('')
   const [ok, setOk] = useState('')
 
-  const { cursoId } = useCursos()
+  const { cursos, cursoId } = useCursos()
+  // Si hay un curso elegido, se sugiere su grado hasta que el docente elija otro.
+  const gradoCurso = cursos.find((c) => String(c.id) === cursoId)?.grado ?? null
+  const grado = gradoElegido === undefined ? gradoCurso : gradoElegido
 
   useEffect(() => {
     api
@@ -35,7 +41,9 @@ export default function DocenteAsignar() {
 
   if (!textos || !alumnos) return error ? <Mensaje>{error}</Mensaje> : <Cargando />
 
-  const visibles = textos.filter((t) => !categoria || t.categoria === categoria)
+  const visibles = textosDeGrado(textos, grado).filter(
+    (t) => !categoria || t.categoria === categoria,
+  )
   const texto = textos.find((t) => String(t.id) === textoId)
   const sinPreguntas = texto && texto.cantidad_preguntas === 0
   const cuestionario = conCuestionario && !sinPreguntas
@@ -61,6 +69,13 @@ export default function DocenteAsignar() {
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Asignar lectura</h1>
       <Tarjeta className="space-y-4">
+        <FiltroGrado
+          valor={grado}
+          onCambiar={(g) => {
+            setGradoElegido(g)
+            setTextoId('')
+          }}
+        />
         <label className="block text-sm font-medium">
           Categoría
           <select

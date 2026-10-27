@@ -5,6 +5,8 @@ import { api } from '../lib/api.js'
 import { InsigniaRacha } from '../components/Racha.jsx'
 import { useCursos } from '../lib/cursos.jsx'
 import { estadoInfo } from '../lib/semaforo.js'
+import FiltroCurso from '../components/FiltroCurso.jsx'
+import { etiquetaHabilidad, fraseCurso, porcentaje } from '../lib/habilidades.js'
 
 function ModalNota({ alumno, onCerrar, onGuardada }) {
   const [texto, setTexto] = useState(alumno.nota ?? '')
@@ -116,13 +118,17 @@ export default function DocenteSemaforo() {
   const [nota, setNota] = useState(null)
   const [nuevo, setNuevo] = useState(false)
   const [palabras, setPalabras] = useState([])
+  const [reforzarCurso, setReforzarCurso] = useState(null)
   const { cursos, cursoId } = useCursos()
   const cursoActual = cursos.find((c) => String(c.id) === cursoId)
 
   const cargar = useCallback(() => {
     api
       .semaforo(cursoId)
-      .then((r) => setAlumnos(r.alumnos))
+      .then((r) => {
+        setAlumnos(r.alumnos)
+        setReforzarCurso(r.resumen?.reforzar ?? null)
+      })
       .catch((e) => setError(e.message))
   }, [cursoId])
   useEffect(cargar, [cargar])
@@ -154,10 +160,19 @@ export default function DocenteSemaforo() {
           </Link>
         </div>
       </div>
+      <FiltroCurso />
       <p className="text-sm text-slate-600">
         Se calcula con el último cuestionario resuelto: 7 o más En nivel, de 4 a menos de 7 A
         seguir, menos de 4 Atención. Las lecturas sin cuestionario no generan evaluación.
       </p>
+      {reforzarCurso && (
+        <Tarjeta className="border-amber-200 bg-amber-50 text-sm text-amber-900">
+          {fraseCurso(
+            reforzarCurso,
+            cursoActual ? `En ${cursoActual.nombre}` : 'Entre tus alumnos',
+          )}
+        </Tarjeta>
+      )}
       {alumnos.length === 0 && (
         <Tarjeta className="text-slate-600">Todavía no tenés alumnos. Agregá el primero.</Tarjeta>
       )}
@@ -181,6 +196,15 @@ export default function DocenteSemaforo() {
                   {a.pendientes > 0 && ` · ${a.pendientes} pendiente${a.pendientes > 1 ? 's' : ''}`}
                 </p>
                 <InsigniaRacha racha={a.racha} />
+                {a.reforzar && (
+                  <span
+                    title="Habilidad con menos aciertos en las actividades asignadas"
+                    className="mt-1 inline-block rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-800"
+                  >
+                    Reforzar: {etiquetaHabilidad(a.reforzar.habilidad).toLowerCase()} (
+                    {porcentaje(a.reforzar)} %)
+                  </span>
+                )}
               </div>
               <span
                 className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-semibold ${info.chip}`}

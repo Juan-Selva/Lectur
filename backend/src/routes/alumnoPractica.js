@@ -3,13 +3,20 @@ import { z } from 'zod'
 import { autenticar, requiereRol } from '../middleware/auth.js'
 import { badRequest, notFound } from '../lib/errors.js'
 import { calcularResultado } from '../lib/semaforo.js'
+import { preguntaParaAlumno, validarRespuestas } from '../lib/preguntas.js'
 import { nuevoHito } from '../lib/racha.js'
 import { rachaDe } from '../lib/rachas.js'
 import { parsear } from '../lib/validar.js'
 
 const completarSchema = z.object({
   respuestas: z
-    .array(z.object({ preguntaId: z.number().int(), opcion: z.number().int().min(0) }))
+    .array(
+      z.object({
+        preguntaId: z.number().int(),
+        opcion: z.number().int().min(0).optional(),
+        orden: z.array(z.number().int().min(0)).max(6).optional(),
+      }),
+    )
     .default([]),
 })
 const ORDEN_NIVEL = { facil: 0, intermedio: 1, dificil: 2 }
@@ -23,17 +30,25 @@ export function alumnoPracticaRouter({ pool }) {
     res.json(await rachaDe(pool, req.usuario.id))
   })
 
-  // Catálogo: solo textos de Lectur (no los propios de ningún docente).
+  // El alumno solo ve textos de su grado (y los pensados para todos los grados).
+  const gradoDe = async (alumnoId) =>
+    (await pool.query('SELECT grado FROM usuarios WHERE id = $1', [alumnoId])).rows[0]?.grado ?? null
+
+  // Catálogo: solo textos de Lectur (no los propios de ningún docente), de su grado.
   r.get('/practica/textos', async (req, res) => {
+    const gradoAlumno = await gradoDe(req.usuario.id)
     const { rows } = await pool.query(
-      `SELECT t.id, t.titulo, t.nivel, t.categoria,
+      `SELECT t.id, t.titulo, t.nivel, t.categoria, t.grado,
               (SELECT count(*)::int FROM preguntas p WHERE p.texto_id = t.id) AS cantidad_preguntas,
               (EXISTS (SELECT 1 FROM asignaciones a WHERE a.texto_id = t.id AND a.alumno_id = $1 AND a.estado = 'completada')
                OR EXISTS (SELECT 1 FROM practicas pr WHERE pr.texto_id = t.id AND pr.alumno_id = $1)) AS leido
-         FROM textos t WHERE t.autor_id IS NULL ORDER BY t.id`,
-      [req.usuario.id],
+         FROM textos t
+        WHERE t.autor_id IS NULL AND ($2::text IS NULL OR t.grado IS NULL OR t.grado::text = $2)
+        ORDER BY t.id`,
+      [req.usuario.id, gradoAlumno],
     )
-    // Sugeridos: los 3 no leídos de las categorías que más lee (primero los más fáciles si empata).
+    // Sugeridos: los 3 no leídos, priorizando las categorías que más lee
+    // (primero los más fáciles si empata).
     const porCategoria = new Map()
     for (const t of rows.filter((x) => x.leido && x.categoria)) {
       porCategoria.set(t.categoria, (porCategoria.get(t.categoria) ?? 0) + 1)
@@ -56,6 +71,7 @@ export function alumnoPracticaRouter({ pool }) {
         titulo: t.titulo,
         nivel: t.nivel,
         categoria: t.categoria,
+        grado: t.grado,
         cantidadPreguntas: t.cantidad_preguntas,
         leido: t.leido,
         sugerido: sugeridos.has(t.id),
@@ -63,10 +79,12 @@ export function alumnoPracticaRouter({ pool }) {
     })
   })
 
-  async function textoDeLectur(id) {
+  async function textoDeLectur(id, alumnoId) {
+    const grado = await gradoDe(alumnoId)
     const { rows } = await pool.query(
-      'SELECT id, titulo, cuerpo, categoria FROM textos WHERE id = $1 AND autor_id IS NULL',
-      [id],
+      `SELECT id, titulo, cuerpo, categoria, autor FROM textos
+        WHERE id = $1 AND autor_id IS NULL AND ($2::text IS NULL OR grado IS NULL OR grado::text = $2)`,
+      [id, grado],
     )
     if (!rows[0]) throw notFound('Texto no encontrado')
     return rows[0]
@@ -74,35 +92,28 @@ export function alumnoPracticaRouter({ pool }) {
 
   // Texto + preguntas SIN la respuesta correcta.
   r.get('/practica/textos/:id', async (req, res) => {
-    const texto = await textoDeLectur(Number(req.params.id))
+    const texto = await textoDeLectur(Number(req.params.id), req.usuario.id)
     const { rows } = await pool.query(
-      'SELECT id, orden, enunciado, tipo, opciones FROM preguntas WHERE texto_id = $1 ORDER BY orden',
+      'SELECT id, orden, enunciado, tipo, formato, opciones FROM preguntas WHERE texto_id = $1 ORDER BY orden',
       [texto.id],
     )
-    res.json({ texto, preguntas: rows })
+    res.json({ texto, preguntas: rows.map(preguntaParaAlumno) })
   })
 
   // Registra la práctica. Con respuestas vacías es "solo lectura".
   r.post('/practica/textos/:id/completar', async (req, res) => {
-    const texto = await textoDeLectur(Number(req.params.id))
+    const texto = await textoDeLectur(Number(req.params.id), req.usuario.id)
     const { respuestas } = parsear(completarSchema, req.body)
     const antes = await rachaDe(pool, req.usuario.id)
 
     let resultado = null
     if (respuestas.length > 0) {
       const { rows: preguntas } = await pool.query(
-        'SELECT id, tipo, opciones, correcta FROM preguntas WHERE texto_id = $1 ORDER BY orden',
+        'SELECT id, tipo, formato, opciones, correcta FROM preguntas WHERE texto_id = $1 ORDER BY orden',
         [texto.id],
       )
       if (preguntas.length === 0) throw badRequest('Este texto no tiene preguntas')
-      const ids = new Set(preguntas.map((p) => p.id))
-      if (respuestas.some((x) => !ids.has(x.preguntaId)))
-        throw badRequest('Hay respuestas a preguntas que no son de este texto')
-      if (new Set(respuestas.map((x) => x.preguntaId)).size !== preguntas.length)
-        throw badRequest('Tenés que responder todas las preguntas')
-      if (respuestas.some((x) => x.opcion >= preguntas.find((p) => p.id === x.preguntaId).opciones.length)) {
-        throw badRequest('Opción inexistente')
-      }
+      validarRespuestas(preguntas, respuestas)
       resultado = calcularResultado(preguntas, respuestas)
     }
 

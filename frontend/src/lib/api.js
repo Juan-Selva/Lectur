@@ -47,13 +47,21 @@ export const api = {
   textos: () => request('GET', '/textos'),
   texto: (id) => request('GET', `/textos/${id}`),
   crearTexto: (d) => request('POST', '/textos', d),
+  duplicarTexto: (id) => request('POST', `/textos/${id}/duplicar`),
   borrarTexto: (id) => request('DELETE', `/textos/${id}`),
   editarTexto: (id, d) => request('PUT', `/textos/${id}`, d),
   cursos: () => request('GET', '/cursos'),
   crearCurso: (d) => request('POST', '/cursos', d),
   editarCurso: (id, d) => request('PUT', `/cursos/${id}`, d),
+  alumnosCurso: (id) => request('GET', `/cursos/${id}/alumnos`),
   borrarCurso: (id) => request('DELETE', `/cursos/${id}`),
-  semaforo: (cursoId) => request('GET', `/docente/semaforo${filtro(cursoId)}`),
+  semaforo: (cursoId, grado) => {
+    const q = new URLSearchParams()
+    if (cursoId) q.set('cursoId', cursoId)
+    if (grado) q.set('grado', grado)
+    const qs = q.toString()
+    return request('GET', `/docente/semaforo${qs ? `?${qs}` : ''}`)
+  },
   importarAlumnos: (d) => request('POST', '/docente/alumnos/importar', d),
   crearAlumno: (d) => request('POST', '/docente/alumnos', d),
   alumno: (id) => request('GET', `/docente/alumnos/${id}`),
@@ -67,6 +75,7 @@ export const api = {
   alertasConfig: () => request('GET', '/docente/alertas/config'),
   guardarAlertasConfig: (c) => request('PUT', '/docente/alertas/config', c),
   rachaAlumno: (id) => request('GET', `/docente/alumnos/${id}/racha`),
+  habilidadesAlumno: (id) => request('GET', `/docente/alumnos/${id}/habilidades`),
   practicasAlumno: (id) => request('GET', `/docente/alumnos/${id}/practicas`),
   historialAlumno: (id) => request('GET', `/docente/alumnos/${id}/historial`),
   palabrasAlumno: (id) => request('GET', `/docente/alumnos/${id}/palabras`),

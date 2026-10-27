@@ -7,6 +7,8 @@ import { useCursos } from '../lib/cursos.jsx'
 import { fechaCorta } from '../lib/fechas.js'
 import { estadoInfo } from '../lib/semaforo.js'
 import { descargarInformePdf } from '../lib/informePdf.js'
+import { etiquetaHabilidad, porcentaje } from '../lib/habilidades.js'
+import Enunciado from '../components/Enunciado.jsx'
 
 function Detalle({ resultado }) {
   const info = estadoInfo(resultado.estado)
@@ -26,9 +28,16 @@ function Detalle({ resultado }) {
               <span className={p.acierto ? 'font-bold text-success' : 'font-bold text-danger'}>
                 {p.acierto ? '✓' : '✗'}
               </span>{' '}
-              {p.enunciado} <span className="text-xs text-slate-500">({p.tipo})</span>
+              <Enunciado texto={p.enunciado} />{' '}
+              <span className="text-xs text-slate-500">({etiquetaHabilidad(p.habilidad)})</span>
             </p>
-            {!p.acierto && (
+            {!p.acierto && p.formato === 'orden' && (
+              <p className="ml-5 text-slate-600">
+                Ordenó: {p.elegidaOrden ? p.elegidaOrden.join(' → ') : '—'} · Orden correcto:{' '}
+                {p.opciones.join(' → ')}
+              </p>
+            )}
+            {!p.acierto && p.formato !== 'orden' && (
               <p className="ml-5 text-slate-600">
                 Respondió: «{p.opciones[p.elegida] ?? '—'}» · Correcta: «{p.opciones[p.correcta]}»
               </p>
@@ -37,6 +46,51 @@ function Detalle({ resultado }) {
         ))}
       </ul>
     </div>
+  )
+}
+
+function PorHabilidad({ alumnoId }) {
+  const [datos, setDatos] = useState(null)
+  useEffect(() => {
+    api
+      .habilidadesAlumno(alumnoId)
+      .then(setDatos)
+      .catch(() => setDatos({ habilidades: [], reforzar: null }))
+  }, [alumnoId])
+  if (!datos || datos.habilidades.length === 0) return null
+  return (
+    <Tarjeta className="space-y-2">
+      <h2 className="font-bold">Por habilidad</h2>
+      <ul className="space-y-1.5 text-sm">
+        {datos.habilidades.map((h) => {
+          const pct = porcentaje(h)
+          const flojo = datos.reforzar?.habilidad === h.habilidad
+          return (
+            <li key={h.habilidad} className="flex items-center gap-3">
+              <span className="w-48 shrink-0 text-slate-700">{etiquetaHabilidad(h.habilidad)}</span>
+              <span
+                className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100"
+                role="img"
+                aria-label={`${pct} % de aciertos`}
+              >
+                <span
+                  className={`block h-full rounded-full ${flojo ? 'bg-warning' : 'bg-success'}`}
+                  style={{ width: `${pct}%` }}
+                />
+              </span>
+              <span className="w-28 shrink-0 text-right text-slate-600">
+                {h.correctas} de {h.total}
+                {flojo && <span className="ml-1 font-semibold text-amber-800">· reforzar</span>}
+              </span>
+            </li>
+          )
+        })}
+      </ul>
+      <p className="text-xs text-slate-500">
+        Solo cuentan las actividades asignadas. Se marca para reforzar con al menos 4 preguntas y
+        menos de 70 % de aciertos.
+      </p>
+    </Tarjeta>
   )
 }
 
@@ -483,6 +537,7 @@ export default function DocenteAlumno() {
           </button>
         </div>
       </div>
+      <PorHabilidad alumnoId={id} />
       <div className="flex gap-1 border-b border-slate-200" role="tablist">
         {TABS.map(([k, e]) => (
           <button

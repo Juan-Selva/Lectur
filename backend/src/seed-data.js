@@ -1,9 +1,11 @@
 // Contenido precargado: textos de primer ciclo con preguntas.
-// `vocabulario`: palabras del texto que un chico podría no conocer; todas tienen que estar en el diccionario propio
+// Cada pregunta tiene `tipo` y, si no es la habilidad por defecto del tipo (dato explícito / inferencia), `habilidad`.
+// `grado`: 1, 2 o 3 (a qué grado apunta el texto; revisar con la docente). `vocabulario`: palabras del texto que un chico podría no conocer; todas tienen que estar en el diccionario propio
 // (src/diccionario-data.js), y un test lo verifica.
 export const textos = [
   {
     titulo: 'El gato Manchas',
+    grado: 2,
     vocabulario: ['mancha', 'posarse', 'vidrio', 'cola', 'ventana', 'quieto'],
     nivel: 'facil',
     categoria: 'ficcion',
@@ -32,6 +34,7 @@ export const textos = [
   },
   {
     titulo: 'La lluvia de la tarde',
+    grado: 2,
     vocabulario: ['paraguas', 'abrigo', 'cubrir', 'viento', 'generoso'],
     nivel: 'intermedio',
     categoria: 'ficcion',
@@ -66,6 +69,7 @@ export const textos = [
   },
   {
     titulo: 'El huerto de la abuela',
+    grado: 3,
     vocabulario: [
       'huerto',
       'sembrar',
@@ -115,6 +119,7 @@ export const textos = [
   },
   {
     titulo: 'Lionel Messi, el chico que amaba el fútbol',
+    grado: 2,
     vocabulario: ['selección', 'barrio', 'festejar', 'famoso', 'club', 'equipo'],
     nivel: 'intermedio',
     categoria: 'biografia',
@@ -136,6 +141,7 @@ export const textos = [
       {
         tipo: 'inferencial',
         enunciado: '¿Por qué Messi se hizo famoso en todo el mundo?',
+        habilidad: 'idea_principal',
         opciones: [
           'Porque practicó mucho y jugó muy bien',
           'Porque vivía en España',
@@ -153,6 +159,7 @@ export const textos = [
   },
   {
     titulo: 'Manuel Belgrano y la bandera',
+    grado: 3,
     vocabulario: ['ejército', 'bandera', 'izar', 'orilla'],
     nivel: 'dificil',
     categoria: 'biografia',
@@ -195,6 +202,7 @@ export const textos = [
   },
   {
     titulo: 'El 25 de mayo de 1810',
+    grado: 3,
     vocabulario: ['cabildo', 'gobierno', 'junta', 'patria'],
     nivel: 'intermedio',
     categoria: 'historia',
@@ -226,6 +234,7 @@ export const textos = [
       {
         tipo: 'inferencial',
         enunciado: '¿Por qué recordamos cada año el 25 de mayo?',
+        habilidad: 'idea_principal',
         opciones: [
           'Porque es el comienzo del camino hacia un país libre',
           'Porque es el día más largo',
@@ -237,6 +246,7 @@ export const textos = [
   },
   {
     titulo: 'El recreo de fútbol',
+    grado: 2,
     vocabulario: ['desventaja', 'mudarse', 'timbre', 'cancha', 'aplaudir', 'gol', 'equipo'],
     nivel: 'facil',
     categoria: 'deporte',
@@ -271,6 +281,7 @@ export const textos = [
   },
   {
     titulo: 'El viaje del agua',
+    grado: 3,
     vocabulario: ['vapor', 'nube', 'ciclo', 'río', 'mar', 'lluvia'],
     nivel: 'intermedio',
     categoria: 'ciencia',
@@ -292,6 +303,7 @@ export const textos = [
       {
         tipo: 'inferencial',
         enunciado: '¿Por qué se dice que el agua "da vueltas"?',
+        habilidad: 'idea_principal',
         opciones: [
           'Porque baila',
           'Porque siempre vuelve a empezar el mismo recorrido',
@@ -308,7 +320,8 @@ export const textos = [
     ],
   },
   {
-    titulo: 'Diego Maradona, el pibe de Villa Fiorito',
+    titulo: 'Diego Maradona, el chico de Villa Fiorito',
+    grado: 3,
     vocabulario: ['humilde', 'barrio', 'debutar', 'capitán', 'gambetear', 'rival', 'habilidad', 'club'],
     nivel: 'intermedio',
     categoria: 'biografia',
@@ -340,6 +353,7 @@ export const textos = [
       {
         tipo: 'inferencial',
         enunciado: '¿Qué quiere decir que era el capitán de la selección?',
+        habilidad: 'vocabulario_contexto',
         opciones: ['Que era el arquero', 'Que era el líder del equipo', 'Que era el entrenador'],
         correcta: 1,
       },
@@ -347,6 +361,7 @@ export const textos = [
   },
   {
     titulo: 'Mario Kempes, el goleador del Mundial 78',
+    grado: 3,
     vocabulario: ['provincia', 'goleador', 'torneo', 'campeón', 'mundial', 'apodo'],
     nivel: 'intermedio',
     categoria: 'biografia',
@@ -368,6 +383,7 @@ export const textos = [
       {
         tipo: 'inferencial',
         enunciado: '¿Qué significa que fue el máximo goleador?',
+        habilidad: 'vocabulario_contexto',
         opciones: [
           'Que hizo más goles que todos los demás',
           'Que corrió más rápido',
@@ -389,6 +405,7 @@ export const textos = [
   },
   {
     titulo: 'El Dibu Martínez, el arquero campeón',
+    grado: 2,
     vocabulario: ['arquero', 'penal', 'campeonato', 'atajar'],
     nivel: 'intermedio',
     categoria: 'biografia',
@@ -427,6 +444,7 @@ export const textos = [
   },
   {
     titulo: 'Ángel Di María, el fideo de Rosario',
+    grado: 3,
     vocabulario: ['medalla', 'olímpico', 'apodo', 'habilidad'],
     nivel: 'dificil',
     categoria: 'biografia',
@@ -465,6 +483,7 @@ export const textos = [
   },
   {
     titulo: 'Pelé, el rey del fútbol',
+    grado: 3,
     vocabulario: ['humilde', 'extraordinario', 'familia'],
     nivel: 'dificil',
     categoria: 'biografia',
@@ -496,6 +515,7 @@ export const textos = [
       {
         tipo: 'inferencial',
         enunciado: '¿Por qué lo llaman el Rey del Fútbol?',
+        habilidad: 'idea_principal',
         opciones: [
           'Porque vivía en un castillo',
           'Porque fue uno de los mejores de la historia',
@@ -505,4 +525,810 @@ export const textos = [
       },
     ],
   },
+
+  // ---------- Primer grado: textos muy cortos para reconocer mayúsculas, oraciones, párrafos y palabras ----------
+  {
+    titulo: 'Mi perro Rocco',
+    vocabulario: ['perro'],
+    grado: 1,
+    nivel: 'facil',
+    categoria: 'naturaleza',
+    cuerpo: 'Sofía tiene un perro. El perro se llama Rocco.',
+    preguntas: [
+      {
+        enunciado: '¿Cómo se llama el perro?',
+        tipo: 'literal',
+        habilidad: 'dato_explicito',
+        opciones: ['Rocco', 'Sofía', 'Pepe'],
+        correcta: 0,
+      },
+      {
+        enunciado: '¿Cuál de estas palabras es un nombre y se escribe con mayúscula?',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        opciones: ['perro', 'Sofía', 'tiene'],
+        correcta: 1,
+      },
+      {
+        enunciado: '¿Cuántas oraciones tiene el texto?',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        opciones: ['1', '2', '3'],
+        correcta: 1,
+      },
+      {
+        enunciado: 'Poné las palabras en orden para armar una oración.',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        formato: 'orden',
+        opciones: ['El', 'perro', 'se', 'llama', 'Rocco'],
+        correcta: 0,
+      },
+    ],
+  },
+  {
+    titulo: 'En la escuela',
+    vocabulario: ['escuela', 'seño'],
+    grado: 1,
+    nivel: 'facil',
+    categoria: 'ficcion',
+    cuerpo: 'Hoy voy a la escuela. Mi seño se llama Ana.',
+    preguntas: [
+      {
+        enunciado: '¿A dónde va hoy?',
+        tipo: 'literal',
+        habilidad: 'dato_explicito',
+        opciones: ['A la plaza', 'A la escuela', 'Al club'],
+        correcta: 1,
+      },
+      {
+        enunciado: '¿Cuál de estas palabras es un nombre y se escribe con mayúscula?',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        opciones: ['escuela', 'Ana', 'seño'],
+        correcta: 1,
+      },
+      {
+        enunciado: '¿Cuál de estas oraciones está bien escrita?',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        opciones: ['Hoyvoy a la escuela.', 'Hoy voy a la escuela.'],
+        correcta: 1,
+      },
+      {
+        enunciado: '¿Con qué termina la primera oración?',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        opciones: ['Con un punto', 'Con una coma', 'Con una letra'],
+        correcta: 0,
+      },
+      {
+        enunciado: 'Poné las palabras en orden para armar una oración.',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        formato: 'orden',
+        opciones: ['Mi', 'seño', 'se', 'llama', 'Ana'],
+        correcta: 0,
+      },
+    ],
+  },
+  {
+    titulo: 'La pelota de Tomi',
+    vocabulario: ['pelota', 'patio'],
+    grado: 1,
+    nivel: 'facil',
+    categoria: 'deporte',
+    cuerpo: 'Tomi tiene una pelota roja. Juega en el patio. Lola juega con Tomi.',
+    preguntas: [
+      {
+        enunciado: '¿De qué color es la pelota?',
+        tipo: 'literal',
+        habilidad: 'dato_explicito',
+        opciones: ['Azul', 'Roja', 'Verde'],
+        correcta: 1,
+      },
+      {
+        enunciado: '¿Cuántas oraciones tiene el texto?',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        opciones: ['2', '4', '3'],
+        correcta: 2,
+      },
+      {
+        enunciado: '¿Cuál de estas palabras es un nombre y se escribe con mayúscula?',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        opciones: ['pelota', 'Lola', 'patio'],
+        correcta: 1,
+      },
+      {
+        enunciado: 'Poné las palabras en orden para armar una oración.',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        formato: 'orden',
+        opciones: ['Tomi', 'tiene', 'una', 'pelota', 'roja'],
+        correcta: 0,
+      },
+    ],
+  },
+  {
+    titulo: 'El gato y la luna',
+    vocabulario: ['gato', 'luna'],
+    grado: 1,
+    nivel: 'facil',
+    categoria: 'ficcion',
+    cuerpo: 'El gato mira la luna. La luna es blanca.',
+    preguntas: [
+      {
+        enunciado: '¿Qué mira el gato?',
+        tipo: 'literal',
+        habilidad: 'dato_explicito',
+        opciones: ['La luna', 'El sol', 'Un pájaro'],
+        correcta: 0,
+      },
+      {
+        enunciado: '¿Cuál de estas oraciones está bien escrita?',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        opciones: ['El gato mira la luna.', 'Elgato mira la luna.'],
+        correcta: 0,
+      },
+      {
+        enunciado: '¿Con qué termina cada oración?',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        opciones: ['Con una coma', 'Con una raya', 'Con un punto'],
+        correcta: 2,
+      },
+      {
+        enunciado: 'Poné las palabras en orden para armar una oración.',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        formato: 'orden',
+        opciones: ['La', 'luna', 'es', 'blanca'],
+        correcta: 0,
+      },
+    ],
+  },
+  {
+    titulo: 'Mi mamá',
+    vocabulario: ['beso'],
+    grado: 1,
+    nivel: 'facil',
+    categoria: 'ficcion',
+    cuerpo: 'Mi mamá se llama Laura.\n\nElla cocina rico. Me da un beso antes de dormir.',
+    preguntas: [
+      {
+        enunciado: 'Un párrafo empieza en un renglón nuevo. ¿Cuántos párrafos tiene el texto?',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        opciones: ['1', '2', '3'],
+        correcta: 1,
+      },
+      {
+        enunciado: '¿Qué hace mamá antes de dormir?',
+        tipo: 'literal',
+        habilidad: 'dato_explicito',
+        opciones: ['Canta', 'Cocina', 'Me da un beso'],
+        correcta: 2,
+      },
+      {
+        enunciado: '¿Cuál de estas palabras es un nombre y se escribe con mayúscula?',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        opciones: ['cocina', 'Laura', 'beso'],
+        correcta: 1,
+      },
+      {
+        enunciado: 'Poné las palabras en orden para armar una oración.',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        formato: 'orden',
+        opciones: ['Ella', 'cocina', 'rico'],
+        correcta: 0,
+      },
+    ],
+  },
+  {
+    titulo: 'Un día de lluvia',
+    vocabulario: ['paraguas', 'botas'],
+    grado: 1,
+    nivel: 'facil',
+    categoria: 'naturaleza',
+    cuerpo: 'Hoy llueve mucho. Mamá me da el paraguas. Salgo con botas.',
+    preguntas: [
+      {
+        enunciado: '¿Qué me da mamá?',
+        tipo: 'literal',
+        habilidad: 'dato_explicito',
+        opciones: ['El paraguas', 'Un abrigo', 'Las botas'],
+        correcta: 0,
+      },
+      {
+        enunciado: '¿Cuántas oraciones tiene el texto?',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        opciones: ['2', '3', '4'],
+        correcta: 1,
+      },
+      {
+        enunciado: '¿Cuál de estas oraciones está bien escrita?',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        opciones: ['Salgoconbotas.', 'Salgo con botas.'],
+        correcta: 1,
+      },
+      {
+        enunciado: 'Poné las palabras en orden para armar una oración.',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        formato: 'orden',
+        opciones: ['Hoy', 'llueve', 'mucho'],
+        correcta: 0,
+      },
+    ],
+  },
+  {
+    titulo: 'La abuela Rosa',
+    vocabulario: ['jardín', 'flor'],
+    grado: 1,
+    nivel: 'facil',
+    categoria: 'ficcion',
+    cuerpo: 'La abuela Rosa tiene un jardín.\n\nEn el jardín hay flores amarillas.',
+    preguntas: [
+      {
+        enunciado: 'Un párrafo empieza en un renglón nuevo. ¿Cuántos párrafos tiene el texto?',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        opciones: ['2', '1', '3'],
+        correcta: 0,
+      },
+      {
+        enunciado: '¿De qué color son las flores?',
+        tipo: 'literal',
+        habilidad: 'dato_explicito',
+        opciones: ['Rojas', 'Amarillas', 'Blancas'],
+        correcta: 1,
+      },
+      {
+        enunciado: '¿Cuál de estas palabras es un nombre y se escribe con mayúscula?',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        opciones: ['jardín', 'flores', 'Rosa'],
+        correcta: 2,
+      },
+      {
+        enunciado: 'Poné las palabras en orden para armar una oración.',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        formato: 'orden',
+        opciones: ['La', 'abuela', 'Rosa', 'tiene', 'un', 'jardín'],
+        correcta: 0,
+      },
+    ],
+  },
+  {
+    titulo: 'En el parque',
+    vocabulario: ['parque', 'hamaca'],
+    grado: 1,
+    nivel: 'facil',
+    categoria: 'ficcion',
+    cuerpo: 'Ayer fui al parque con Juan. Subimos a la hamaca. Fue muy divertido.',
+    preguntas: [
+      {
+        enunciado: '¿Con quién fue al parque?',
+        tipo: 'literal',
+        habilidad: 'dato_explicito',
+        opciones: ['Con Pedro', 'Con Lucas', 'Con Juan'],
+        correcta: 2,
+      },
+      {
+        enunciado: '¿Cuántas oraciones tiene el texto?',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        opciones: ['3', '2', '4'],
+        correcta: 0,
+      },
+      {
+        enunciado: '¿Cuál de estas palabras es un nombre y se escribe con mayúscula?',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        opciones: ['Juan', 'parque', 'hamaca'],
+        correcta: 0,
+      },
+      {
+        enunciado: 'Poné las palabras en orden para armar una oración.',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        formato: 'orden',
+        opciones: ['Fue', 'muy', 'divertido'],
+        correcta: 0,
+      },
+    ],
+  },
+  {
+    titulo: 'Mi cumple',
+    vocabulario: ['cumple', 'torta', 'velitas'],
+    grado: 1,
+    nivel: 'facil',
+    categoria: 'ficcion',
+    cuerpo: 'Hoy es mi cumple. Mi tía trae una torta. Soplo las velitas.',
+    preguntas: [
+      {
+        enunciado: '¿Qué trae la tía?',
+        tipo: 'literal',
+        habilidad: 'dato_explicito',
+        opciones: ['Globos', 'Un regalo', 'Una torta'],
+        correcta: 2,
+      },
+      {
+        enunciado: '¿Cuál de estas oraciones está bien escrita?',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        opciones: ['Hoy es mi cumple.', 'Hoyesmicumple.'],
+        correcta: 0,
+      },
+      {
+        enunciado: '¿Cuántas oraciones tiene el texto?',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        opciones: ['3', '1', '2'],
+        correcta: 0,
+      },
+      {
+        enunciado: 'Poné las palabras en orden para armar una oración.',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        formato: 'orden',
+        opciones: ['Soplo', 'las', 'velitas'],
+        correcta: 0,
+      },
+    ],
+  },
+  {
+    titulo: 'El pez de colores',
+    vocabulario: ['pez', 'pecera'],
+    grado: 1,
+    nivel: 'facil',
+    categoria: 'naturaleza',
+    cuerpo: 'Tengo un pez de colores. Nada en una pecera.',
+    preguntas: [
+      {
+        enunciado: '¿Dónde nada el pez?',
+        tipo: 'literal',
+        habilidad: 'dato_explicito',
+        opciones: ['En el río', 'En una pecera', 'En el mar'],
+        correcta: 1,
+      },
+      {
+        enunciado: 'Un párrafo empieza en un renglón nuevo. ¿Cuántos párrafos tiene el texto?',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        opciones: ['1', '2'],
+        correcta: 0,
+      },
+      {
+        enunciado: '¿Qué palabra empieza con mayúscula en la segunda oración?',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        opciones: ['Nada', 'pecera', 'pez'],
+        correcta: 0,
+      },
+      {
+        enunciado: 'Poné las palabras en orden para armar una oración.',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        formato: 'orden',
+        opciones: ['Nada', 'en', 'una', 'pecera'],
+        correcta: 0,
+      },
+    ],
+  },
+  {
+    titulo: 'El loro pelado',
+    autor: 'Horacio Quiroga (adaptación)',
+    grado: 3,
+    vocabulario: [
+      'loro',
+      'chacra',
+      'choclo',
+      'centinela',
+      'peón',
+      'manso',
+      'jaguar',
+      'zarpazo',
+      'garra',
+      'felino',
+      'lomo',
+      'agachado',
+    ],
+    nivel: 'intermedio',
+    categoria: 'ficcion',
+    cuerpo:
+      'Había una vez una banda de loros que vivía en el monte. A la mañana temprano iban a comer choclos a la chacra, y a la tarde comían naranjas. Hacían un gran ruido con sus gritos, y se sentaban en las ramas más altas para mirar si venía alguien.\n\nUn día, un peón de la chacra bajó de un tiro a un loro centinela. El loro estaba solamente herido, y cayó al suelo. El hijo del dueño de la casa lo llevó para su hermana, para que la curara. El loro se curó muy bien y se volvió completamente manso. Lo llamaron Pedrito.\n\nPedrito aprendió a dar la pata y le gustaba tomar té con leche con pan mojado. Se pasaba todo el día gritando:\n\n—¡Rica papa! ¡Rica papa para Pedrito!\n\nPedrito era un loro muy feliz. Tenía libertad para volar por donde quisiera. Una tarde de sol, después de una gran lluvia, Pedrito sintió ganas de volar lejos y se fue hasta el monte. Voló y voló, hasta que de repente vio brillar entre las hojas verdes dos luces verdes y firmes, como dos bichitos de luz.\n\n¿Qué será eso?, pensó Pedrito. ¡Rica papa! ¿Qué será?\n\nEntonces descubrió que esas luces eran los ojos de un jaguar que estaba agachado, mirándolo fijamente. Pedrito, que no conocía el peligro, se sentó en una rama cercana y se puso a hablarle con su voz de loro:\n\n—¡Buen día, jaguar! —le dijo—. ¡Rica papa para Pedrito! ¡Tomá el té con leche!\n\nEl jaguar, con una voz muy ronca, le respondió:\n\n—Bueno... arrímate un poco más que no te escucho.\n\nEl loro, contento porque el jaguar le hablaba, se acercó un poco más y gritó de nuevo:\n\n—¡Rica papa! ¡Está rico el té con leche!\n\nEl jaguar dio un salto gigante en el aire y tiró un zarpazo terrible. No llegó a atrapar al loro, pero con la punta de las garras le arrancó todas las plumas del lomo y de la cola. Pedrito sintió un dolor espantoso y voló como pudo, asustado y llorando en silencio. Estaba completamente pelado.\n\nCuando volvió a la casa, Pedrito tenía tanta vergüenza de que lo vieran sin plumas que se escondió en el hueco de un árbol del jardín. Pasaron los días, y todos en la casa pensaban que Pedrito se había perdido o que se lo había comido un felino.\n\nPero una mañana, cuando sus plumas nuevas volvieron a crecer brillantes y verdes, Pedrito salió de su escondite, voló hacia el comedor y gritó con todas sus fuerzas:\n\n—¡Rica papa! ¡Rica papa para Pedrito! ¡Miren mis plumas!\n\nTodos se pusieron muy felices al verlo regresar sano, fuerte y listo para contar su gran aventura en la selva.',
+    preguntas: [
+      {
+        enunciado: '¿Qué iban a comer los loros a la chacra a la mañana temprano?',
+        tipo: 'literal',
+        opciones: ['Choclos', 'Naranjas', 'Pan mojado', 'Té con leche'],
+        correcta: 0,
+      },
+      {
+        enunciado: '¿Qué le gustaba tomar a Pedrito?',
+        tipo: 'literal',
+        opciones: ['Agua de lluvia', 'Jugo de naranja', 'Té con leche con pan mojado', 'Leche sola'],
+        correcta: 2,
+      },
+      {
+        enunciado: 'En el texto dice «se volvió completamente manso». ¿Qué quiere decir *manso*?',
+        tipo: 'inferencial',
+        habilidad: 'vocabulario_contexto',
+        opciones: [
+          'Muy enojado',
+          'Tranquilo y acostumbrado a las personas',
+          'Muy ruidoso',
+          'Con mucha hambre',
+        ],
+        correcta: 1,
+      },
+      {
+        enunciado: 'Cuando el jaguar le pidió al loro que se acercara más, ¿qué quería hacer?',
+        tipo: 'inferencial',
+        opciones: ['Hacerse su amigo', 'Darle de comer', 'Atraparlo', 'Enseñarle a volar'],
+        correcta: 2,
+      },
+      {
+        enunciado: 'En los diálogos, cada vez que alguien habla aparece una raya (—). ¿Para qué sirve?',
+        tipo: 'literal',
+        habilidad: 'convenciones',
+        opciones: [
+          'Para separar palabras',
+          'Para mostrar que alguien está hablando',
+          'Para terminar una oración',
+          'Para indicar un número',
+        ],
+        correcta: 1,
+      },
+      {
+        enunciado: '¿De qué trata principalmente el cuento?',
+        tipo: 'inferencial',
+        habilidad: 'idea_principal',
+        opciones: [
+          'De cómo se cultivan los choclos en una chacra',
+          'De un jaguar que se hace amigo de un loro',
+          'De un peón que cuida la chacra',
+          'De un loro que se queda sin plumas por hablarle a un jaguar y vuelve a casa cuando le crecen de nuevo',
+        ],
+        correcta: 3,
+      },
+      {
+        enunciado: 'Poné los hechos en el orden en que pasaron.',
+        tipo: 'literal',
+        habilidad: 'estructura',
+        formato: 'orden',
+        opciones: [
+          'Un peón bajó de un tiro a un loro',
+          'El loro se curó y aprendió a dar la pata',
+          'El jaguar le arrancó las plumas',
+          'Pedrito se escondió en el hueco de un árbol',
+          'Las plumas nuevas crecieron y Pedrito volvió a la casa',
+        ],
+        correcta: 0,
+      },
+    ],
+  },
 ]
+
+// Preguntas que se suman a los textos precargados de 2.° y 3.° (ordenar los hechos, vocabulario por contexto e idea principal).
+// `npm run seed` las agrega a los textos que ya estaban cargados, sin tocar las que ya tenían.
+const preguntasExtra = {
+  'El gato Manchas': [
+    {
+      enunciado: 'Poné los hechos en el orden en que pasaron.',
+      tipo: 'literal',
+      habilidad: 'estructura',
+      formato: 'orden',
+      opciones: [
+        'Manchas mira a los pájaros desde la ventana',
+        'Un pájaro se posó cerca',
+        'Manchas quiso saltar',
+        'Se quedó quieto y movió la cola',
+      ],
+      correcta: 0,
+    },
+    {
+      enunciado: 'En el texto dice «Se quedó quieto y movió la cola». ¿Qué quiere decir *quieto*?',
+      tipo: 'inferencial',
+      habilidad: 'vocabulario_contexto',
+      opciones: ['Que corre muy rápido', 'Que no se mueve', 'Que está dormido'],
+      correcta: 1,
+    },
+  ],
+  'La lluvia de la tarde': [
+    {
+      enunciado: 'Poné los hechos en el orden en que pasaron.',
+      tipo: 'literal',
+      habilidad: 'estructura',
+      formato: 'orden',
+      opciones: [
+        'Lucía salió de la escuela',
+        'Empezó a llover fuerte',
+        'Lucía cubrió al nene con el paraguas',
+        'El nene sonrió y dijo gracias',
+      ],
+      correcta: 0,
+    },
+    {
+      enunciado: 'En el texto dice «lo cubrió y caminaron juntos hasta su casa». ¿Qué quiere decir *cubrió*?',
+      tipo: 'inferencial',
+      habilidad: 'vocabulario_contexto',
+      opciones: ['Lo tapó con el paraguas para que no se mojara', 'Lo empujó', 'Se lo llevó corriendo'],
+      correcta: 0,
+    },
+  ],
+  'El huerto de la abuela': [
+    {
+      enunciado: 'Poné los hechos en el orden en que pasaron.',
+      tipo: 'literal',
+      habilidad: 'estructura',
+      formato: 'orden',
+      opciones: [
+        'Removía el suelo',
+        'Sembraba las semillas',
+        'Regaban con una lata',
+        'Preparaban una ensalada con lo cosechado',
+      ],
+      correcta: 0,
+    },
+    {
+      enunciado: '¿De qué trata principalmente el texto?',
+      tipo: 'inferencial',
+      habilidad: 'idea_principal',
+      opciones: [
+        'Cuidar un huerto lleva tiempo y paciencia',
+        'Las plantas crecen en un día',
+        'A Tomás no le gustaba el huerto',
+      ],
+      correcta: 0,
+    },
+  ],
+  'Lionel Messi, el chico que amaba el fútbol': [
+    {
+      enunciado: 'Poné los hechos en el orden en que pasaron.',
+      tipo: 'literal',
+      habilidad: 'estructura',
+      formato: 'orden',
+      opciones: [
+        'Nació en Rosario',
+        'Empezó a jugar en un club de su barrio',
+        'Se fue a vivir a Barcelona',
+        'Ganó la Copa del Mundo con la selección',
+      ],
+      correcta: 0,
+    },
+    {
+      enunciado:
+        'En el texto dice «Mucha gente salió a festejar a las calles». ¿Qué quiere decir *festejar*?',
+      tipo: 'inferencial',
+      habilidad: 'vocabulario_contexto',
+      opciones: ['Protestar', 'Dormir', 'Celebrar con alegría'],
+      correcta: 2,
+    },
+  ],
+  'Manuel Belgrano y la bandera': [
+    {
+      enunciado: 'Poné los hechos en el orden en que pasaron.',
+      tipo: 'literal',
+      habilidad: 'estructura',
+      formato: 'orden',
+      opciones: [
+        'Nació en Buenos Aires',
+        'Estudió mucho',
+        'Creó una bandera celeste y blanca',
+        'La bandera se izó en Rosario',
+      ],
+      correcta: 0,
+    },
+    {
+      enunciado:
+        'En el texto dice «La bandera se izó por primera vez en la ciudad de Rosario». ¿Qué quiere decir *izó*?',
+      tipo: 'inferencial',
+      habilidad: 'vocabulario_contexto',
+      opciones: ['Se pintó', 'Se subió bien alto', 'Se guardó'],
+      correcta: 1,
+    },
+  ],
+  'El 25 de mayo de 1810': [
+    {
+      enunciado: 'Poné los hechos en el orden en que pasaron.',
+      tipo: 'literal',
+      habilidad: 'estructura',
+      formato: 'orden',
+      opciones: [
+        'La gente se juntó frente al Cabildo',
+        'Querían un gobierno propio',
+        'Se formó la Primera Junta',
+        'Cada 25 de mayo lo recordamos',
+      ],
+      correcta: 0,
+    },
+    {
+      enunciado:
+        'En el texto dice «mucha gente se juntó frente al Cabildo, en Buenos Aires». ¿Qué quiere decir *Cabildo*?',
+      tipo: 'inferencial',
+      habilidad: 'vocabulario_contexto',
+      opciones: ['Un edificio de la ciudad', 'Un río', 'Una bandera'],
+      correcta: 0,
+    },
+  ],
+  'El recreo de fútbol': [
+    {
+      enunciado: 'Poné los hechos en el orden en que pasaron.',
+      tipo: 'literal',
+      habilidad: 'estructura',
+      formato: 'orden',
+      opciones: [
+        'Faltaba un jugador',
+        'Llegó Sofía',
+        'Tomás la invitó a jugar',
+        'Sofía hizo dos goles',
+        'Sonó el timbre y todos aplaudieron',
+      ],
+      correcta: 0,
+    },
+    {
+      enunciado:
+        'En el texto dice «el equipo de Tomás estaba en desventaja». ¿Qué quiere decir *desventaja*?',
+      tipo: 'inferencial',
+      habilidad: 'vocabulario_contexto',
+      opciones: [
+        'Estaba ganando el partido',
+        'Estaba descansando',
+        'Tenía menos jugadores que el otro equipo',
+      ],
+      correcta: 2,
+    },
+  ],
+  'El viaje del agua': [
+    {
+      enunciado: 'Poné los hechos en el orden en que pasaron.',
+      tipo: 'literal',
+      habilidad: 'estructura',
+      formato: 'orden',
+      opciones: [
+        'El sol calienta el agua del mar',
+        'El vapor sube y forma las nubes',
+        'Las nubes sueltan la lluvia',
+        'Los ríos llevan el agua al mar',
+      ],
+      correcta: 0,
+    },
+    {
+      enunciado: '¿De qué trata principalmente el texto?',
+      tipo: 'inferencial',
+      habilidad: 'idea_principal',
+      opciones: [
+        'De cómo el agua da vueltas en la naturaleza',
+        'De cómo se hacen los ríos',
+        'De por qué hace frío arriba',
+      ],
+      correcta: 0,
+    },
+  ],
+  'Diego Maradona, el chico de Villa Fiorito': [
+    {
+      enunciado: 'Poné los hechos en el orden en que pasaron.',
+      tipo: 'literal',
+      habilidad: 'estructura',
+      formato: 'orden',
+      opciones: [
+        'Creció en Villa Fiorito',
+        'Debutó en Argentinos Juniors',
+        'Jugó en Boca y en el Napoli',
+        'Ganó la Copa del Mundo en México',
+      ],
+      correcta: 0,
+    },
+    {
+      enunciado:
+        'En el texto dice «un barrio humilde del sur del Gran Buenos Aires». ¿Qué quiere decir *humilde*?',
+      tipo: 'inferencial',
+      habilidad: 'vocabulario_contexto',
+      opciones: ['Un barrio muy lujoso', 'Un barrio con pocos recursos', 'Un barrio muy nuevo'],
+      correcta: 1,
+    },
+  ],
+  'Mario Kempes, el goleador del Mundial 78': [
+    {
+      enunciado: 'Poné los hechos en el orden en que pasaron.',
+      tipo: 'literal',
+      habilidad: 'estructura',
+      formato: 'orden',
+      opciones: [
+        'Nació en Bell Ville',
+        'Jugó en un club de su zona',
+        'Viajó a jugar a España',
+        'Fue el máximo goleador del Mundial 78',
+      ],
+      correcta: 0,
+    },
+    {
+      enunciado: '¿Por qué es famoso Mario Kempes?',
+      tipo: 'inferencial',
+      habilidad: 'idea_principal',
+      opciones: [
+        'Fue el goleador de un Mundial que ganó la Argentina',
+        'Fue arquero en España',
+        'Nació en Inglaterra',
+      ],
+      correcta: 0,
+    },
+  ],
+  'El Dibu Martínez, el arquero campeón': [
+    {
+      enunciado: 'Poné los hechos en el orden en que pasaron.',
+      tipo: 'literal',
+      habilidad: 'estructura',
+      formato: 'orden',
+      opciones: [
+        'Nació en Mar del Plata',
+        'Se fue a jugar a Inglaterra',
+        'Atajó un penal en la final',
+        'Argentina ganó el campeonato',
+      ],
+      correcta: 0,
+    },
+    {
+      enunciado: 'En el texto dice «atajó un penal muy importante». ¿Qué quiere decir *atajó*?',
+      tipo: 'inferencial',
+      habilidad: 'vocabulario_contexto',
+      opciones: ['Pateó muy fuerte', 'Frenó el tiro para que no entrara', 'Se fue de la cancha'],
+      correcta: 1,
+    },
+  ],
+  'Ángel Di María, el fideo de Rosario': [
+    {
+      enunciado: 'Poné los hechos en el orden en que pasaron.',
+      tipo: 'literal',
+      habilidad: 'estructura',
+      formato: 'orden',
+      opciones: [
+        'Empezó a jugar en Rosario Central',
+        'Ganó la medalla de oro en 2008',
+        'Hizo el gol de la Copa América 2021',
+        'Metió un gol en la final del Mundial 2022',
+      ],
+      correcta: 0,
+    },
+    {
+      enunciado: 'En el texto dice «lo apodaron el Fideo». ¿Qué quiere decir *apodaron*?',
+      tipo: 'inferencial',
+      habilidad: 'vocabulario_contexto',
+      opciones: ['Lo retaron', 'Lo felicitaron', 'Le pusieron un sobrenombre'],
+      correcta: 2,
+    },
+  ],
+  'Pelé, el rey del fútbol': [
+    {
+      enunciado: 'Poné los hechos en el orden en que pasaron.',
+      tipo: 'literal',
+      habilidad: 'estructura',
+      formato: 'orden',
+      opciones: [
+        'Nació en Brasil en 1940',
+        'Jugaba con una pelota de medias viejas',
+        'Se convirtió en un jugador extraordinario',
+        'Ganó tres Copas del Mundo',
+      ],
+      correcta: 0,
+    },
+    {
+      enunciado: 'En el texto dice «un jugador extraordinario». ¿Qué quiere decir *extraordinario*?',
+      tipo: 'inferencial',
+      habilidad: 'vocabulario_contexto',
+      opciones: ['Muy cansado', 'Muy especial, fuera de lo común', 'Muy chiquito'],
+      correcta: 1,
+    },
+  ],
+}
+for (const t of textos) t.preguntas.push(...(preguntasExtra[t.titulo] ?? []))

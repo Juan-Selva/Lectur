@@ -20,6 +20,7 @@ Necesitás un PostgreSQL local y un `.env` (copiá `.env.example`).
 ```bash
 npm install
 npm run seed:demo   # aplica migraciones y carga datos de prueba
+npm run seed:progreso   # demo: Mateo con 12 días de racha y progreso; Lucas en amarillo; Renata, Joaquín y Camila (3.° B)
 npm run dev
 ```
 
@@ -36,8 +37,8 @@ Contraseña de todos: `lectur1234`
 |---|---|---|
 | POST | `/api/auth/login`, `/api/auth/registro-docente` | — |
 | GET | `/api/auth/me` | todos |
-| GET/POST | `/api/textos`, GET/PUT/DELETE `/api/textos/:id` (PUT solo textos propios) | docente |
-| GET/POST | `/api/cursos`, PUT/DELETE `/api/cursos/:id` (no se borra un curso con alumnos) | docente |
+| GET/POST | `/api/textos`, GET/PUT/DELETE `/api/textos/:id` (PUT solo textos propios), POST `/api/textos/:id/duplicar` (copia un texto de Lectur a "Mis textos" con sus preguntas) | docente |
+| GET/POST | `/api/cursos`, PUT/DELETE `/api/cursos/:id` (no se borra un curso con alumnos), GET `/api/cursos/:id/alumnos` (alumnos del curso) | docente |
 | POST | `/api/docente/alumnos/importar` (carga masiva: `confirmar: false` valida y muestra vista previa; `true` crea las filas válidas; máx. 100 por archivo) | docente |
 | POST | `/api/docente/alumnos` (con `cursoId`; el grado sale del curso) | docente |
 | GET/PUT/DELETE | `/api/docente/alumnos/:id` | docente |
@@ -74,6 +75,18 @@ Se calculan en el momento a partir de los datos (no se guardan) y el docente las
 ## Categorías
 
 Los textos tienen categoría: ficción, historia, deporte, ciencia, naturaleza o biografía (hay biografías como la de Messi y Belgrano).
+
+## Preguntas de ordenar
+
+Cada pregunta tiene un `formato`: `opcion` (opción múltiple) u `orden` (migración 009, `src/lib/preguntas.js`). En las de `orden`, `opciones` guarda de 2 a 6 elementos **en el orden correcto**; el alumno los recibe mezclados (la mezcla es fija por pregunta y nunca coincide con el orden correcto) y responde con `{ preguntaId, orden: [lugares mostrados, en el orden elegido] }`. Se corrige todo o nada y vale como una pregunta más del puntaje. En el resultado se guarda el orden elegido como posiciones originales, y el detalle del docente (`historial`) devuelve `elegidaOrden`. Para resaltar una palabra en un enunciado se la escribe entre asteriscos (`*palabra*`); el frontend la muestra marcada.
+
+## Habilidades
+
+Cada pregunta mide una habilidad: dato explícito, inferencia, estructura, idea principal, vocabulario por contexto o convenciones de escritura (migración 008, `src/lib/habilidades.js`). El `tipo` (literal / inferencial) se deriva de la habilidad; si un cliente solo manda `tipo`, se asume dato explícito o inferencia. `GET /api/docente/semaforo` devuelve, por alumno, `habilidades` (aciertos y total de las actividades asignadas) y `reforzar`, y en `resumen.reforzar` la habilidad que más cuesta entre los alumnos filtrados. `GET /api/docente/alumnos/:id/habilidades` da el desglose de la ficha, y el resumen para familias suma una sugerencia de esa habilidad. Una habilidad solo se marca para reforzar con al menos 4 preguntas respondidas y menos de 70 % de aciertos. `npm run seed` etiqueta las preguntas de los textos precargados.
+
+## Grados
+
+Cada texto tiene un `grado` (1, 2 o 3; sin valor = sirve para todos los grados), que se carga en la migración 007. Los textos precargados reciben su grado en `src/seed-data.js` al correr `npm run seed` o `npm run seed:demo` (también en bases que ya tenían los textos). `GET /api/textos?grado=N` devuelve los de ese grado y los de todos los grados; `GET /api/docente/semaforo?grado=N` filtra alumnos por grado (se combina con `cursoId`); la práctica libre del alumno solo muestra (y solo deja abrir o completar) los textos de su grado y los pensados para todos los grados; los sugeridos salen de ahí. Las lecturas que asigna el docente no tienen esa restricción.
 
 ## Semáforo
 

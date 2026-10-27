@@ -6,7 +6,8 @@ import { badRequest, conflict, notFound } from '../lib/errors.js'
 import { estadoPorPuntaje } from '../lib/semaforo.js'
 import { parsear } from '../lib/validar.js'
 import { rachasDe } from '../lib/rachas.js'
-import { cursoDelDocente, filtroCurso, resolverCursoYGrado } from '../lib/cursos.js'
+import { habilidadAReforzar, habilidadesDe, sumarHabilidades } from '../lib/habilidades.js'
+import { cursoDelDocente, filtroCurso, filtroGrado, resolverCursoYGrado } from '../lib/cursos.js'
 
 const alumnoSchema = z.object({
   nombre: z.string().trim().min(2).max(80),
@@ -56,6 +57,7 @@ export function docenteRouter({ pool }) {
   // Semáforo: por alumno, último resultado con cuestionario (null => "Sin eval.").
   r.get('/semaforo', async (req, res) => {
     const cursoId = filtroCurso(req.query)
+    const grado = filtroGrado(req.query)
     if (cursoId) await cursoDelDocente(pool, cursoId, req.usuario.id)
     const { rows } = await pool.query(
       `SELECT u.id, u.nombre, u.grado, u.curso_id, c.nombre AS curso,
@@ -77,10 +79,15 @@ export function docenteRouter({ pool }) {
             LIMIT 1
          ) ult ON true
         WHERE u.rol = 'alumno' AND u.docente_id = $1 AND ($2::int IS NULL OR u.curso_id = $2)
+          AND ($3::text IS NULL OR u.grado = $3)
         ORDER BY u.nombre`,
-      [req.usuario.id, cursoId],
+      [req.usuario.id, cursoId, grado === null ? null : String(grado)],
     )
     const rachas = await rachasDe(
+      pool,
+      rows.map((a) => a.id),
+    )
+    const habilidades = await habilidadesDe(
       pool,
       rows.map((a) => a.id),
     )
@@ -93,6 +100,8 @@ export function docenteRouter({ pool }) {
       nota: a.nota,
       pendientes: a.pendientes,
       racha: { actual: rachas.get(a.id).actual, mejor: rachas.get(a.id).mejor },
+      habilidades: habilidades.get(a.id),
+      reforzar: habilidadAReforzar(habilidades.get(a.id)),
       estado: estadoPorPuntaje(a.puntaje),
       ultimo:
         a.puntaje === null
@@ -107,7 +116,9 @@ export function docenteRouter({ pool }) {
               fecha: a.completada_en,
             },
     }))
-    res.json({ alumnos })
+    // La habilidad que más cuesta entre los alumnos que se están viendo (curso y/o grado filtrados).
+    const delCurso = habilidadAReforzar(sumarHabilidades(rows.map((a) => habilidades.get(a.id))))
+    res.json({ alumnos, resumen: { reforzar: delCurso } })
   })
 
   r.post('/asignaciones', async (req, res) => {

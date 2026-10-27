@@ -13,12 +13,8 @@ export default function Layout() {
   const { usuario, salir } = useAuth()
   const esDocente = usuario.rol === 'docente'
   const { pathname } = useLocation()
-  const filtrable = [
-    '/docente',
-    '/docente/asignar',
-    '/docente/palabras',
-    '/docente/alertas',
-  ].includes(pathname)
+  // En el semáforo el filtro de curso está dentro de la pantalla.
+  const filtrable = ['/docente/asignar', '/docente/palabras', '/docente/alertas'].includes(pathname)
   if (!esDocente) return <LayoutAlumno />
   return (
     <div className="min-h-screen">

@@ -1,15 +1,22 @@
 import { Router } from 'express'
 import { z } from 'zod'
 import { autenticar, requiereRol } from '../middleware/auth.js'
-import { badRequest, conflict, notFound } from '../lib/errors.js'
+import { conflict, notFound } from '../lib/errors.js'
 import { calcularResultado } from '../lib/semaforo.js'
+import { preguntaParaAlumno, validarRespuestas } from '../lib/preguntas.js'
 import { parsear } from '../lib/validar.js'
 import { nuevoHito } from '../lib/racha.js'
 import { rachaDe } from '../lib/rachas.js'
 
 const completarSchema = z.object({
   respuestas: z
-    .array(z.object({ preguntaId: z.number().int(), opcion: z.number().int().min(0) }))
+    .array(
+      z.object({
+        preguntaId: z.number().int(),
+        opcion: z.number().int().min(0).optional(),
+        orden: z.array(z.number().int().min(0)).max(6).optional(),
+      }),
+    )
     .default([]),
 })
 
@@ -19,7 +26,7 @@ export function alumnoRouter({ pool }) {
 
   async function propia(id, alumnoId) {
     const { rows } = await pool.query(
-      `SELECT a.*, t.titulo, t.cuerpo, t.categoria FROM asignaciones a JOIN textos t ON t.id = a.texto_id
+      `SELECT a.*, t.titulo, t.cuerpo, t.categoria, t.autor FROM asignaciones a JOIN textos t ON t.id = a.texto_id
         WHERE a.id = $1 AND a.alumno_id = $2 AND a.estado <> 'cancelada'`,
       [id, alumnoId],
     )
@@ -97,10 +104,10 @@ export function alumnoRouter({ pool }) {
     let preguntas = []
     if (a.con_cuestionario) {
       const q = await pool.query(
-        'SELECT id, orden, enunciado, tipo, opciones FROM preguntas WHERE texto_id = $1 ORDER BY orden',
+        'SELECT id, orden, enunciado, tipo, formato, opciones FROM preguntas WHERE texto_id = $1 ORDER BY orden',
         [a.texto_id],
       )
-      preguntas = q.rows
+      preguntas = q.rows.map(preguntaParaAlumno)
     }
     res.json({
       actividad: {
@@ -108,6 +115,7 @@ export function alumnoRouter({ pool }) {
         titulo: a.titulo,
         cuerpo: a.cuerpo,
         categoria: a.categoria,
+        autor: a.autor,
         conCuestionario: a.con_cuestionario,
         estado: a.estado,
       },
@@ -133,18 +141,10 @@ export function alumnoRouter({ pool }) {
     }
 
     const { rows: preguntas } = await pool.query(
-      'SELECT id, tipo, opciones, correcta FROM preguntas WHERE texto_id = $1 ORDER BY orden',
+      'SELECT id, tipo, formato, opciones, correcta FROM preguntas WHERE texto_id = $1 ORDER BY orden',
       [a.texto_id],
     )
-    const ids = new Set(preguntas.map((p) => p.id))
-    if (respuestas.some((x) => !ids.has(x.preguntaId)))
-      throw badRequest('Hay respuestas a preguntas que no son de este texto')
-    if (new Set(respuestas.map((x) => x.preguntaId)).size !== preguntas.length) {
-      throw badRequest('Tenés que responder todas las preguntas')
-    }
-    if (respuestas.some((x) => x.opcion >= preguntas.find((p) => p.id === x.preguntaId).opciones.length)) {
-      throw badRequest('Opción inexistente')
-    }
+    validarRespuestas(preguntas, respuestas)
 
     const res_ = calcularResultado(preguntas, respuestas)
     const client = await pool.connect()

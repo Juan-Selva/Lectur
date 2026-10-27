@@ -5,6 +5,7 @@ import { autenticar, requiereRol } from '../middleware/auth.js'
 import { badRequest, conflict, notFound } from '../lib/errors.js'
 import { estadoPorPuntaje } from '../lib/semaforo.js'
 import { armarObservaciones } from '../lib/resumen.js'
+import { habilidadAReforzar, habilidadesDe } from '../lib/habilidades.js'
 import { parsear } from '../lib/validar.js'
 import { rachaDe } from '../lib/rachas.js'
 import { cursoDelDocente, filtroCurso, resolverCursoYGrado } from '../lib/cursos.js'
@@ -118,7 +119,7 @@ export function docenteAlumnosRouter({ pool }) {
     const pregs = textoIds.length
       ? (
           await pool.query(
-            'SELECT id, texto_id, orden, enunciado, tipo, opciones, correcta FROM preguntas WHERE texto_id = ANY($1::int[]) ORDER BY orden',
+            'SELECT id, texto_id, orden, enunciado, tipo, habilidad, formato, opciones, correcta FROM preguntas WHERE texto_id = ANY($1::int[]) ORDER BY orden',
             [textoIds],
           )
         ).rows
@@ -128,6 +129,8 @@ export function docenteAlumnosRouter({ pool }) {
       let resultado = null
       if (x.respuestas) {
         const elegidas = new Map(x.respuestas.map((p) => [p.preguntaId, p.opcion]))
+        const ordenes = new Map(x.respuestas.map((p) => [p.preguntaId, p.orden]))
+        const aciertos = new Map(x.respuestas.map((p) => [p.preguntaId, p.acierto]))
         resultado = {
           puntaje: x.puntaje,
           estado: estadoPorPuntaje(x.puntaje),
@@ -140,10 +143,14 @@ export function docenteAlumnosRouter({ pool }) {
             .map((p) => ({
               enunciado: p.enunciado,
               tipo: p.tipo,
+              habilidad: p.habilidad,
+              formato: p.formato,
               opciones: p.opciones,
               correcta: p.correcta,
+              // En las de ordenar: lo que ordenó el alumno (textos). `opciones` ya está en el orden correcto.
+              elegidaOrden: ordenes.get(p.id)?.map((i) => p.opciones[i]) ?? null,
               elegida: elegidas.get(p.id) ?? null,
-              acierto: elegidas.get(p.id) === p.correcta,
+              acierto: aciertos.get(p.id) === true,
             })),
         }
       }
@@ -158,6 +165,13 @@ export function docenteAlumnosRouter({ pool }) {
       }
     })
     res.json({ alumno: a, actividades })
+  })
+
+  // Aciertos por habilidad (solo actividades asignadas, como el semáforo) y cuál conviene reforzar.
+  r.get('/alumnos/:id/habilidades', async (req, res) => {
+    const a = await alumnoDelDocente(Number(req.params.id), req.usuario.id)
+    const habilidades = (await habilidadesDe(pool, [a.id])).get(a.id)
+    res.json({ habilidades, reforzar: habilidadAReforzar(habilidades) })
   })
 
   const palabrasDe = async (alumnoId) =>
@@ -256,6 +270,8 @@ export function docenteAlumnosRouter({ pool }) {
         req.usuario.id,
       ])
     ).rows[0]
+    const habilidades = (await habilidadesDe(pool, [a.id])).get(a.id)
+    const reforzar = habilidadAReforzar(habilidades)
     const promedio = conResultado.length
       ? Math.round((conResultado.reduce((s, h) => s + h.puntaje, 0) / conResultado.length) * 10) / 10
       : null
@@ -271,6 +287,8 @@ export function docenteAlumnosRouter({ pool }) {
       promedio,
       estado: conResultado.length ? estadoPorPuntaje(conResultado[0].puntaje) : null,
       porTipo,
+      habilidades,
+      reforzar,
       ultimas: conResultado.slice(0, 5).map((h) => ({
         titulo: h.titulo,
         categoria: h.categoria,
@@ -289,6 +307,7 @@ export function docenteAlumnosRouter({ pool }) {
         inferencial: porTipo.inferencial,
         palabrasConsultadas: palabras.length,
         lecturasConCuestionario: conResultado.length,
+        reforzar,
       }),
     })
   })
