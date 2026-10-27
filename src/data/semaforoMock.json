@@ -1,8 +1,0 @@
-[
-  { "id": 1, "nombre": "Mateo G.", "estado": "verde", "ultimaActividad": "Cuestionario: El perro de Mateo", "nota": null },
-  { "id": 2, "nombre": "Sofía R.", "estado": "amarillo", "ultimaActividad": "Cuestionario: La bicicleta nueva", "nota": "Confundió una pregunta inferencial, revisar en la próxima clase." },
-  { "id": 3, "nombre": "Lucas P.", "estado": "rojo", "ultimaActividad": "Cuestionario: El perro de Mateo", "nota": "Respondió bien las literales pero falló todas las inferenciales. Necesita acompañamiento." },
-  { "id": 4, "nombre": "Valentina M.", "estado": "verde", "ultimaActividad": "Cuestionario: El experimento de la clase", "nota": null },
-  { "id": 5, "nombre": "Tomás D.", "estado": "amarillo", "ultimaActividad": "Cuestionario: La bicicleta nueva", "nota": null },
-  { "id": 6, "nombre": "Martina L.", "estado": "rojo", "ultimaActividad": "Cuestionario: El perro de Mateo", "nota": null }
-]

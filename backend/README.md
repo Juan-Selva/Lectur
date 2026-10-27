@@ -11,6 +11,8 @@ docker compose exec api node src/seed.js --demo   # textos, definiciones y usuar
 
 API en http://localhost:3000/api/health
 
+Después de cada cambio en el código (o `git pull`) hay que reconstruir la imagen con `docker compose up --build -d`; si no, sigue corriendo la versión anterior.
+
 ## Sin Docker
 
 Necesitás un PostgreSQL local y un `.env` (copiá `.env.example`).
