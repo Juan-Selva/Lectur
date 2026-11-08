@@ -13,7 +13,7 @@ const { migrate } = await import('../src/migrate.js')
 const { createApp } = await import('../src/app.js')
 const { seedBase, seedDemo } = await import('../src/seed.js')
 const { estadoPorPuntaje, calcularResultado } = await import('../src/lib/semaforo.js')
-const { normalizar } = await import('../src/lib/diccionario.js')
+const { normalizar, adaptarParaPrimaria, lematizar, buscarSugerencias } = await import('../src/lib/diccionario.js')
 
 let pg, pool, server, base, dir
 const llamadasExternas = []
@@ -60,8 +60,16 @@ before(async () => {
 after(async () => {
   server?.close()
   await pool?.end()
-  await pg?.stop()
-  rmSync(dir, { recursive: true, force: true })
+  try {
+    await pg?.stop()
+  } catch {
+    // ignorar fallo al cerrar pg
+  }
+  try {
+    rmSync(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 })
+  } catch {
+    // ignorar fallo al borrar dir temporal en Windows
+  }
 })
 
 test('semáforo: umbrales de la demo', () => {
@@ -286,6 +294,50 @@ test('diccionario: base propia, externo con caché y fallos', async () => {
   assert.equal((await api('GET', '/api/diccionario?palabra=dos palabras', { token })).status, 400)
   assert.equal((await api('GET', '/api/diccionario', { token })).status, 400)
   assert.equal((await api('GET', '/api/diccionario?palabra=casa')).status, 401)
+})
+
+test('diccionario: adaptaciones pedagógicas para primaria (ejemplos, sinónimos, lematización y sugerencias)', async () => {
+  const token = await login('mateo@lectur.test')
+
+  // 1. Consulta con datos enriquecidos (ejemplo, categoría y sinónimos)
+  const huerto = await api('GET', '/api/diccionario?palabra=huerto', { token })
+  assert.equal(huerto.status, 200)
+  assert.equal(huerto.data.palabra, 'huerto')
+  assert.equal(huerto.data.categoria, 'naturaleza')
+  assert.ok(huerto.data.ejemplo && huerto.data.ejemplo.length > 5)
+  assert.ok(huerto.data.sinonimos && huerto.data.sinonimos.includes('huerta'))
+
+  // 2. Palabras destacadas para niños
+  const dest = await api('GET', '/api/diccionario/destacadas', { token })
+  assert.equal(dest.status, 200)
+  assert.ok(Array.isArray(dest.data.destacadas) && dest.data.destacadas.length >= 8)
+  assert.ok(dest.data.destacadas.some((d) => d.palabra === 'huerto'))
+
+  // 3. Lematización infantil: búsqueda de plurales resuelve a la palabra base
+  const gatos = await api('GET', '/api/diccionario?palabra=gatos', { token })
+  assert.equal(gatos.status, 200)
+  assert.equal(gatos.data.esVariante, true)
+  assert.equal(gatos.data.palabraBase, 'gato')
+  assert.ok(gatos.data.significado.includes('maúlla') || gatos.data.significado.includes('ratones'))
+
+  // 4. Sugerencias ante errores de tipeo y en respuesta 404
+  const resZzzz = await api('GET', '/api/diccionario?palabra=zzzz', { token })
+  assert.equal(resZzzz.status, 404)
+  assert.ok(Array.isArray(resZzzz.data.sugerencias))
+
+  const sugerencias = await buscarSugerencias(pool, 'huertoo')
+  assert.ok(sugerencias.includes('huerto'))
+
+  // 5. Función pura: adaptarParaPrimaria limpia marcas de la RAE
+  const limpia = adaptarParaPrimaria('1. tr. Mover algo con fuerza hacia adelante.')
+  assert.equal(limpia, 'Mover algo con fuerza hacia adelante.')
+  const persona = adaptarParaPrimaria('adj. Dicho de una persona: Que no tiene miedo a nada.')
+  assert.equal(persona, 'Persona que no tiene miedo a nada.')
+
+  // 6. Función pura: lematizar
+  assert.deepEqual(lematizar('árboles'), ['arbol'])
+  assert.deepEqual(lematizar('luces'), ['luz'])
+  assert.deepEqual(lematizar('perrito'), ['perro', 'perr'])
 })
 
 // ---------- Ampliación: gestión de alumnos, edición, historial, palabras, resumen, categorías ----------

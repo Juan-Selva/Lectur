@@ -10,9 +10,9 @@ export default function Diccionario() {
             🔍
           </span>
           <div>
-            <h1 className="text-3xl">Diccionario</h1>
+            <h1 className="text-3xl font-extrabold text-emerald-950">Diccionario escolar</h1>
             <p className="font-semibold text-slate-700">
-              Escribí una palabra para saber qué significa.
+              Escribí una palabra para conocer su significado, escucharla y ver ejemplos fáciles de entender.
             </p>
           </div>
         </div>

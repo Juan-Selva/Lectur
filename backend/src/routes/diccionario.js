@@ -1,11 +1,16 @@
 import { Router } from 'express'
 import { autenticar } from '../middleware/auth.js'
-import { badRequest, notFound } from '../lib/errors.js'
+import { badRequest } from '../lib/errors.js'
 import { PALABRA_VALIDA, normalizar } from '../lib/diccionario.js'
 
 export function diccionarioRouter({ diccionario, pool }) {
   const r = Router()
   r.use(autenticar)
+
+  // Palabras destacadas para inspirar a chicos de primaria a explorar vocabulario nuevo
+  r.get('/destacadas', (_req, res) => {
+    res.json({ destacadas: diccionario.destacadas ? diccionario.destacadas() : [] })
+  })
 
   r.get('/', async (req, res) => {
     const palabra = String(req.query.palabra ?? '').trim()
@@ -21,7 +26,13 @@ export function diccionarioRouter({ diccionario, pool }) {
         [req.usuario.id, normalizar(palabra), palabra.toLowerCase(), Boolean(def)],
       )
     }
-    if (!def) throw notFound('No encontramos esa palabra')
+    if (!def) {
+      const sugerencias = diccionario.sugerir ? await diccionario.sugerir(palabra) : []
+      return res.status(404).json({
+        error: 'No encontramos esa palabra',
+        sugerencias,
+      })
+    }
     res.json(def)
   })
 

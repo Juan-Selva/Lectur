@@ -5,9 +5,10 @@ export const getToken = () => localStorage.getItem(CLAVE)
 export const setToken = (t) => (t ? localStorage.setItem(CLAVE, t) : localStorage.removeItem(CLAVE))
 
 export class ApiError extends Error {
-  constructor(status, message) {
+  constructor(status, message, data = null) {
     super(message)
     this.status = status
+    this.data = data
   }
 }
 
@@ -31,7 +32,7 @@ async function request(metodo, ruta, body) {
   const data = res.status === 204 ? null : await res.json().catch(() => null)
   if (!res.ok) {
     if (res.status === 401 && getToken()) alVencerSesion()
-    throw new ApiError(res.status, data?.error ?? 'Ocurrió un error inesperado')
+    throw new ApiError(res.status, data?.error ?? 'Ocurrió un error inesperado', data)
   }
   return data
 }
@@ -100,4 +101,5 @@ export const api = {
 
   // ambos
   definir: (palabra) => request('GET', `/diccionario?palabra=${encodeURIComponent(palabra)}`),
+  palabrasDestacadas: () => request('GET', '/diccionario/destacadas'),
 }

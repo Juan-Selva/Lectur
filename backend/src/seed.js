@@ -6,6 +6,7 @@ import { migrate } from './migrate.js'
 import { normalizar } from './lib/diccionario.js'
 import { textos } from './seed-data.js'
 import { definiciones } from './diccionario-data.js'
+import { detallesPrimaria, inferirDetalle } from './lib/diccionario-primaria.js'
 import { habilidadPorDefecto } from './lib/habilidades.js'
 
 async function insertarPregunta(pool, textoId, p, orden) {
@@ -82,12 +83,27 @@ export async function seedBase(pool) {
   }
   // Las definiciones propias pisan a las que se hayan guardado antes de la fuente externa,
   // y se actualizan si cambia el texto: el diccionario propio siempre tiene prioridad.
-  for (const [palabra, significado] of definiciones) {
+  for (const [palabra, significado, extra] of definiciones) {
+    const clave = normalizar(palabra)
+    const detalle = extra || detallesPrimaria[clave] || inferirDetalle(palabra, significado)
     await pool.query(
-      `INSERT INTO definiciones (palabra_norm, palabra, significado, fuente) VALUES ($1, $2, $3, 'propia')
+      `INSERT INTO definiciones (palabra_norm, palabra, significado, fuente, ejemplo, sinonimos, categoria)
+       VALUES ($1, $2, $3, 'propia', $4, $5, $6)
        ON CONFLICT (palabra_norm) DO UPDATE
-         SET palabra = EXCLUDED.palabra, significado = EXCLUDED.significado, fuente = 'propia'`,
-      [normalizar(palabra), palabra, significado],
+         SET palabra = EXCLUDED.palabra,
+             significado = EXCLUDED.significado,
+             fuente = 'propia',
+             ejemplo = EXCLUDED.ejemplo,
+             sinonimos = EXCLUDED.sinonimos,
+             categoria = EXCLUDED.categoria`,
+      [
+        clave,
+        palabra,
+        significado,
+        detalle.ejemplo ?? null,
+        detalle.sinonimos ?? null,
+        detalle.categoria ?? null,
+      ],
     )
   }
 }
