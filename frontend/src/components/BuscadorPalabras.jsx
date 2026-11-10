@@ -33,9 +33,7 @@ export default function BuscadorPalabras({ autoFocus = false, palabraInicial = '
       setResultado(res)
     } catch (err) {
       setError(
-        err.status === 404
-          ? 'No encontramos esa palabra. Revisá cómo está escrita.'
-          : err.message,
+        err.status === 404 ? 'No encontramos esa palabra. Revisá cómo está escrita.' : err.message,
       )
       if (err.data?.sugerencias?.length) {
         setSugerencias(err.data.sugerencias)
@@ -129,19 +127,22 @@ export default function BuscadorPalabras({ autoFocus = false, palabraInicial = '
           {resultado.esVariante && (
             <div className="mb-3 flex items-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-800">
               <span aria-hidden="true">💡</span>
-              <span>{resultado.mensajeVariante || `Te mostramos la palabra base "${resultado.palabraBase}".`}</span>
+              <span>
+                {resultado.mensajeVariante ||
+                  `Te mostramos la palabra base "${resultado.palabraBase}".`}
+              </span>
             </div>
           )}
 
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-3xl font-extrabold capitalize text-emerald-900">
-              {resultado.palabra}
+              {resultado.palabraBase || resultado.palabra}
             </h2>
 
             {puedeHablar && (
               <button
                 type="button"
-                onClick={() => decir(resultado.palabra)}
+                onClick={() => decir(resultado.palabraBase || resultado.palabra)}
                 className="rounded-full border-2 border-emerald-200 bg-white px-3.5 py-1 text-sm font-bold text-emerald-800 transition hover:bg-emerald-50"
               >
                 <span aria-hidden="true">🔊</span> Escuchar

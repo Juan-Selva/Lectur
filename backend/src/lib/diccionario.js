@@ -15,6 +15,12 @@ export function normalizar(palabra) {
 
 export const PALABRA_VALIDA = /^\p{L}+(?:-\p{L}+)*$/u
 
+// Expresión para identificar marcas de país o región de la RAE (ej. "Arg. ", "Col. y Ven. ").
+// Exige explícitamente el punto después de cada abreviatura para evitar falsos positivos
+// con palabras comunes como "Parte" (Par.), "Colegio" (Col.), "Espalda" (Esp.) o "Pan" (Pan.).
+export const PAISES_RAE_REGEX =
+  /^(?:(?:(?:Arg|Bol|Chile|Col|C\.?\s*Rica|Cuba|Ec|El\s+Salv|Esp|Filip|Guat|Hond|Méx|Nic|Pan|Par|Perú|P\.?\s*Rico|R\.?\s*Dom|Ur|Ven)\.)(?:\s*(?:,|y|o)\s*)?)+\s*/i
+
 function conTiempoLimite(promesa, ms) {
   let timer
   const limite = new Promise((_, reject) => {
@@ -61,25 +67,35 @@ export function adaptarParaPrimaria(texto) {
         // Quitar sinónimos y antónimos pegados al texto de la RAE
         .replace(/(?:Sin\.|Ant\.|Confr\.|Comp\.):.*$/i, '')
         // Quitar marcas de uso de la RAE (ej. "U. en m. ref. a la especie." o "U. t. c. s.")
-        .replace(/\b(?:U|u)\s*\.\s*(?:en\s+m\.)?\s*(?:ref\.\s*a\s*la\s*especie|[^\n.]*)\.?/gi, '')
+        .replace(
+          /\b(?:U|u)\s*\.\s*(?:también\s+|m[aá]s\s+)?(?:en\s+)?(?:m\.|f\.|pl\.|plural|c\.)?[^\n.]*\.?/gi,
+          '',
+        )
+        .replace(/\b(?:U|u)\s*\.\s*.*$/gi, '')
         // Quitar referencias cruzadas de diccionario adulto (ej. "(‖ máquina para levantar pesos)")
         .replace(/\(‖[^)]*\)/g, '')
+        // Quitar fórmulas científicas o químicas entre paréntesis (ej. "(Fórm. H2O)")
+        .replace(/\((?:Fórm\.|Símb\.)[^)]*\)/gi, '')
         // Quitar numeración de acepción
         .replace(/^\d+\.\s*/, '')
         // Quitar marcas de país o región al inicio (ej. "Perú. ", "Arg. y Ur. ", "C. Rica. ")
-        .replace(
-          /^(?:(?:Arg|Bol|Chile|Col|C\. Rica|Cuba|Ec|El Salv|Esp|Filip|Guat|Hond|Méx|Nic|Pan|Par|Perú|P\. Rico|R\. Dom|Ur|Ven)\.?(?:\s*(?:,|y|o)\s*)?)+\s*/i,
-          '',
-        )
+        .replace(PAISES_RAE_REGEX, '')
+        // Quitar fórmulas retóricas o giros técnicos que confunden a niños
+        .replace(/\bpor antonom(?:\.|asia\b)\s*/gi, '')
+        .replace(/\b(?:por anal\.|por analogía)\s*/gi, '')
+        .replace(/\b(?:p\.\s*ext\.|por extensión)\s*/gi, '')
+        .replace(/^(?:plural|f\.\s*pl\.|m\.\s*pl\.)\s*/gi, '')
         // Quitar abreviaturas gramaticales y de registro de la RAE
         .replace(/\b(?:tr|intr|prnl|adj|adv|prep|conj|interj|pron|art|loc)\.\s*/gi, '')
         .replace(/\b(?:f|m)\.\s*/gi, '')
         .replace(/\b(?:p|u)\.\s*(?:us|t|c)\.\s*/gi, '')
-        .replace(/\b(?:coloq|desus|ant|fig|p\. ext|despect|poét)\.\s*/gi, '')
+        .replace(/\b(?:coloq|desus|ant|fig|p\. ext|despect|poét|germ|vulg|irón|rur)\.\s*/gi, '')
         .replace(
           /\b(?:Zool|Bot|Geom|Fís|Quím|Med|Mil|Mar|Astron|Dep|Der|Filipoco|Astambién|Carpoco)\.\s*/gi,
           '',
         )
+        // Limpiar restos de abreviaturas gramaticales al final (ej. ". s.", ". adj.")
+        .replace(/\s*\.\s*(?:s|adj|tr|intr|prnl)\b\.?/gi, '')
         // Simplificar términos biológicos o anatómicos a palabras familiares para primaria
         .replace(/\bdigitígrado,?\s*/gi, '')
         .replace(/\bfélidos\b/gi, 'felinos')
@@ -129,8 +145,13 @@ export function lematizar(palabra) {
     candidatos.push(norm.slice(0, -2))
   }
 
-  // Plurales en -s (gatos -> gato, casas -> casa, libros -> libro, mochilas -> mochila)
-  if (norm.endsWith('s') && !norm.endsWith('es') && norm.length > 3) {
+  // Plurales en -s (gatos -> gato, casas -> casa, libros -> libro, mochilas -> mochila, pies -> pie)
+  if (
+    norm.endsWith('s') &&
+    !norm.endsWith('ces') &&
+    (!norm.endsWith('es') || /[aeiou]es$/.test(norm)) &&
+    norm.length >= 4
+  ) {
     candidatos.push(norm.slice(0, -1))
   }
 
@@ -164,11 +185,7 @@ export function distanciaLevenshtein(a, b) {
     let previo = i
     for (let j = 1; j <= a.length; j++) {
       const costo = b[i - 1] === a[j - 1] ? 0 : 1
-      const actual = Math.min(
-        fila[j] + 1,
-        previo + 1,
-        fila[j - 1] + costo,
-      )
+      const actual = Math.min(fila[j] + 1, previo + 1, fila[j - 1] + costo)
       fila[j - 1] = previo
       previo = actual
     }
@@ -229,6 +246,25 @@ export const PALABRAS_DESTACADAS = [
   { palabra: 'colmena', emoji: '🍯', pista: 'La casita dulce de las abejas' },
 ]
 
+// Clasifica y puntúa las acepciones de la RAE para elegir la más adecuada para primaria
+function puntuarAcepcionRae(def) {
+  let puntos = 100
+  // Descartar acepciones no aptas para menores
+  if (/ven[eé]re|amanceba|obscen|prost|insulto/i.test(def)) return -1
+  // Penalizar definiciones arcaicas o en desuso
+  if (/\b(?:desus|ant|hist)\.\s*/i.test(def)) puntos -= 50
+  // Penalizar registros inapropiados
+  if (/\b(?:vulg|despect|germ)\.\s*/i.test(def)) puntos -= 60
+  // Penalizar fórmulas retóricas excesivamente específicas (ej. "por antonom. cabeza de ovino...")
+  if (/\bpor antonom(?:\.|asia\b)/i.test(def)) puntos -= 40
+  if (/\b(?:por anal\.|por analogía)/i.test(def)) puntos -= 30
+  // Penalizar acepciones de plural arcaicas
+  if (/^(?:plural|f\.\s*pl\.|m\.\s*pl\.)\b/i.test(def)) puntos -= 30
+  // Penalizar regionalismos de un solo país si hay definiciones generales disponibles
+  if (PAISES_RAE_REGEX.test(def)) puntos -= 25
+  return puntos
+}
+
 // Fuente externa por defecto: librería no oficial `rae-api`, que consulta la web
 // de la RAE. Se procesa con `adaptarParaPrimaria` para garantizar comprensión infantil.
 export async function buscarEnRae(palabra) {
@@ -240,9 +276,7 @@ export async function buscarEnRae(palabra) {
 
   const norm = normalizar(palabra)
   // Coincidencia exacta con el lema principal (descartando desinencias de género como "gato, ta" o "león, na")
-  const exacto =
-    resultados.find((r) => limpiarCabeceraRae(r.getHeader()) === norm) ??
-    resultados[0]
+  const exacto = resultados.find((r) => limpiarCabeceraRae(r.getHeader()) === norm) ?? resultados[0]
   const ficha = await rae.fetchWord(exacto.getId())
   const definiciones = ficha
     .getDefinitions()
@@ -250,14 +284,14 @@ export async function buscarEnRae(palabra) {
     .filter(Boolean)
   if (definiciones.length === 0) return null
 
-  // Priorizamos acepciones generales (que no comiencen con restricción de país como "Perú.")
-  const acepcionesGenerales = definiciones.filter(
-    (d) =>
-      !/^(?:(?:Arg|Bol|Chile|Col|C\. Rica|Cuba|Ec|El Salv|Esp|Filip|Guat|Hond|Méx|Nic|Pan|Par|Perú|P\. Rico|R\. Dom|Ur|Ven)\.?(?:\s*(?:,|y|o)\s*)?)+/i.test(
-        d,
-      ),
-  )
-  const listaAcepciones = acepcionesGenerales.length > 0 ? acepcionesGenerales : definiciones
+  // Ordenamos las acepciones priorizando las de uso general, cotidianas y comprensibles para niños
+  const acepcionesCandidatas = definiciones
+    .map((d, idx) => ({ d, pts: puntuarAcepcionRae(d), idx }))
+    .filter((x) => x.pts > 0)
+    .sort((a, b) => b.pts - a.pts || a.idx - b.idx)
+    .map((x) => x.d)
+
+  const listaAcepciones = acepcionesCandidatas.length > 0 ? acepcionesCandidatas : definiciones
 
   let adaptado = null
   let sinonimosExtraidos = []
@@ -270,9 +304,19 @@ export async function buscarEnRae(palabra) {
   }
 
   if (!adaptado) return null
+  const lemaBase = exacto
+    ? exacto
+        .getHeader()
+        .replace(/<[^>]*>/g, '')
+        .split(/[,/]/)[0]
+        .trim()
+        .toLowerCase()
+    : palabra
+
   return {
     significado: adaptado,
     sinonimos: sinonimosExtraidos.length ? sinonimosExtraidos.join(', ') : null,
+    palabraBase: lemaBase,
   }
 }
 
@@ -296,30 +340,42 @@ export function crearServicioDiccionario({
         [clave],
       )
       if (propia.rows[0]) {
-        const item = propia.rows[0]
-        // Si una entrada externa previa guardó marcas residuales de la RAE (ej. "Perú. ...", "Sin.:..."),
-        // la saneamos pedagógicamente para que no se muestre al alumno.
-        if (
+        let item = propia.rows[0]
+        // Si una entrada externa previa guardó marcas residuales de la RAE o definiciones anómalas
+        // (como "cabeza de ovino", marcas de país o abreviaturas técnicas), la saneamos o purgamos de la caché.
+        const esDefinicionInvalida =
           item.fuente === 'externa' &&
           (item.significado?.includes('Sin.:') ||
-            /^(?:Perú|Arg|Col|Esp|Chile|Bol|C\. Rica|Cuba|Ec|El Salv|Filip|Guat|Hond|Méx|Nic|Pan|Par|P\. Rico|R\. Dom|Ur|Ven)\./i.test(
-              item.significado,
-            ))
-        ) {
+            item.significado?.toLowerCase().includes('por antonom') ||
+            item.significado?.toLowerCase().includes('cabeza de ovino') ||
+            item.significado?.toLowerCase().includes('. s.') ||
+            PAISES_RAE_REGEX.test(item.significado))
+
+        if (esDefinicionInvalida) {
           const limpio = adaptarParaPrimaria(item.significado)
-          if (limpio && limpio !== item.significado) {
+          if (
+            limpio &&
+            !limpio.toLowerCase().includes('por antonom') &&
+            !limpio.toLowerCase().includes('cabeza de ovino')
+          ) {
             item.significado = limpio
             pool
               .query('UPDATE definiciones SET significado = $1 WHERE palabra_norm = $2', [limpio, clave])
               .catch(() => {})
+          } else {
+            await pool.query('DELETE FROM definiciones WHERE palabra_norm = $1', [clave]).catch(() => {})
+            item = null
           }
         }
-        const detalle = detallesPrimaria[clave] ?? inferirDetalle(item.palabra, item.significado)
-        return {
-          ...item,
-          ejemplo: item.ejemplo ?? detalle.ejemplo,
-          sinonimos: item.sinonimos ?? detalle.sinonimos,
-          categoria: item.categoria ?? detalle.categoria,
+
+        if (item) {
+          const detalle = detallesPrimaria[clave] ?? inferirDetalle(item.palabra, item.significado)
+          return {
+            ...item,
+            ejemplo: item.ejemplo ?? detalle.ejemplo,
+            sinonimos: item.sinonimos ?? detalle.sinonimos,
+            categoria: item.categoria ?? detalle.categoria,
+          }
         }
       }
 
@@ -359,10 +415,44 @@ export function crearServicioDiccionario({
       }
       if (!externa?.significado) return null
 
-      const significadoAdaptado =
-        adaptarParaPrimaria(externa.significado, palabra) ?? externa.significado
+      const significadoAdaptado = adaptarParaPrimaria(externa.significado, palabra) ?? externa.significado
 
       const detalleInferido = inferirDetalle(palabra, significadoAdaptado)
+
+      const baseCanonical = externa.palabraBase ? normalizar(externa.palabraBase) : clave
+      const esVarianteLema = externa.palabraBase && baseCanonical !== clave
+
+      if (esVarianteLema) {
+        // Guardamos la palabra base canónica en el diccionario para futuras consultas
+        await pool
+          .query(
+            `INSERT INTO definiciones (palabra_norm, palabra, significado, fuente, ejemplo, sinonimos, categoria)
+             VALUES ($1, $2, $3, 'externa', $4, $5, $6)
+             ON CONFLICT (palabra_norm) DO UPDATE
+               SET significado = COALESCE(EXCLUDED.significado, definiciones.significado)`,
+            [
+              baseCanonical,
+              externa.palabraBase,
+              significadoAdaptado,
+              externa.ejemplo ?? detalleInferido.ejemplo,
+              externa.sinonimos ?? detalleInferido.sinonimos,
+              externa.categoria ?? detalleInferido.categoria,
+            ],
+          )
+          .catch(() => {})
+
+        return {
+          palabra: palabra.trim().toLowerCase(),
+          palabraBase: externa.palabraBase,
+          esVariante: true,
+          mensajeVariante: `Te mostramos la definición de "${externa.palabraBase}".`,
+          significado: significadoAdaptado,
+          fuente: 'externa',
+          ejemplo: externa.ejemplo ?? detalleInferido.ejemplo,
+          sinonimos: externa.sinonimos ?? detalleInferido.sinonimos,
+          categoria: externa.categoria ?? detalleInferido.categoria,
+        }
+      }
 
       const guardada = await pool.query(
         `INSERT INTO definiciones (palabra_norm, palabra, significado, fuente, ejemplo, sinonimos, categoria)

@@ -13,7 +13,8 @@ const { migrate } = await import('../src/migrate.js')
 const { createApp } = await import('../src/app.js')
 const { seedBase, seedDemo } = await import('../src/seed.js')
 const { estadoPorPuntaje, calcularResultado } = await import('../src/lib/semaforo.js')
-const { normalizar, adaptarParaPrimaria, lematizar, buscarSugerencias } = await import('../src/lib/diccionario.js')
+const { normalizar, adaptarParaPrimaria, lematizar, buscarSugerencias } =
+  await import('../src/lib/diccionario.js')
 
 let pg, pool, server, base, dir
 const llamadasExternas = []
@@ -320,6 +321,20 @@ test('diccionario: adaptaciones pedagógicas para primaria (ejemplos, sinónimos
   assert.equal(gatos.data.palabraBase, 'gato')
   assert.ok(gatos.data.significado.includes('maúlla') || gatos.data.significado.includes('ratones'))
 
+  const cabezas = await api('GET', '/api/diccionario?palabra=cabezas', { token })
+  assert.equal(cabezas.status, 200)
+  assert.equal(cabezas.data.esVariante, true)
+  assert.equal(cabezas.data.palabraBase, 'cabeza')
+  assert.equal(cabezas.data.categoria, 'cuerpo')
+  assert.ok(!cabezas.data.significado.includes('ovino'))
+  assert.ok(cabezas.data.significado.startsWith('Parte superior del cuerpo'))
+
+  const pies = await api('GET', '/api/diccionario?palabra=pies', { token })
+  assert.equal(pies.status, 200)
+  assert.equal(pies.data.esVariante, true)
+  assert.equal(pies.data.palabraBase, 'pie')
+  assert.equal(pies.data.categoria, 'cuerpo')
+
   // 4. Sugerencias ante errores de tipeo y en respuesta 404
   const resZzzz = await api('GET', '/api/diccionario?palabra=zzzz', { token })
   assert.equal(resZzzz.status, 404)
@@ -333,6 +348,11 @@ test('diccionario: adaptaciones pedagógicas para primaria (ejemplos, sinónimos
   assert.equal(limpia, 'Mover algo con fuerza hacia adelante.')
   const persona = adaptarParaPrimaria('adj. Dicho de una persona: Que no tiene miedo a nada.')
   assert.equal(persona, 'Persona que no tiene miedo a nada.')
+  // No recorta palabras comunes que empiezan como países (ej. Parte con Par.)
+  const parte = adaptarParaPrimaria('Parte superior del cuerpo humano. Sin.: cráneo.')
+  assert.equal(parte, 'Parte superior del cuerpo humano.')
+  const antonom = adaptarParaPrimaria('por antonom. plato típico de una región.')
+  assert.equal(antonom, 'Plato típico de una región.')
 
   // 6. Función pura: lematizar
   assert.deepEqual(lematizar('árboles'), ['arbol'])

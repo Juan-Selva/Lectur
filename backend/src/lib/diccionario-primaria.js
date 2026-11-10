@@ -562,6 +562,138 @@ export const detallesPrimaria = {
     categoria: 'comida',
   },
 
+  // --- El cuerpo humano ---
+  cuerpo: {
+    ejemplo: 'Hacemos ejercicio y jugamos para mantener fuerte y sano todo el cuerpo.',
+    sinonimos: 'organismo, figura',
+    categoria: 'cuerpo',
+  },
+  cabeza: {
+    ejemplo: 'Se puso una gorra azul en la cabeza para protegerse del sol.',
+    sinonimos: 'cráneo',
+    categoria: 'cuerpo',
+  },
+  cara: {
+    ejemplo: 'Tenía una gran sonrisa dibujada en la cara al ver a sus amigos.',
+    sinonimos: 'rostro, semblante',
+    categoria: 'cuerpo',
+  },
+  ojo: {
+    ejemplo: 'Abrió bien los ojos para ver los hermosos colores del arcoíris.',
+    sinonimos: 'vista, mirada',
+    categoria: 'cuerpo',
+  },
+  nariz: {
+    ejemplo: 'Sintió el rico aroma de las flores del jardín con la nariz.',
+    sinonimos: 'olfato',
+    categoria: 'cuerpo',
+  },
+  oreja: {
+    ejemplo: 'Puso atención con sus orejas para escuchar el canto del pajarito.',
+    sinonimos: 'oído',
+    categoria: 'cuerpo',
+  },
+  lengua: {
+    ejemplo: 'Probó el helado de frutilla con la lengua para saborearlo bien.',
+    sinonimos: 'papila',
+    categoria: 'cuerpo',
+  },
+  cuello: {
+    ejemplo: 'Se abrigó el cuello con una bufanda de lana en los días de frío.',
+    sinonimos: 'garganta',
+    categoria: 'cuerpo',
+  },
+  hombro: {
+    ejemplo: 'Llevaba una mochila liviana apoyada sobre el hombro.',
+    sinonimos: 'omóplato',
+    categoria: 'cuerpo',
+  },
+  brazo: {
+    ejemplo: 'Abrió los brazos para darle un abrazo enorme y cariñoso a su abuela.',
+    sinonimos: 'extremidad',
+    categoria: 'cuerpo',
+  },
+  codo: {
+    ejemplo: 'Apoyó el codo en la mesa mientras leía su cuento preferido.',
+    sinonimos: 'articulación',
+    categoria: 'cuerpo',
+  },
+  mano: {
+    ejemplo: 'Saludó levantando la mano con una gran sonrisa.',
+    sinonimos: 'palma',
+    categoria: 'cuerpo',
+  },
+  dedo: {
+    ejemplo: 'Señaló la estrella más brillante de la noche con el dedo.',
+    sinonimos: 'falange',
+    categoria: 'cuerpo',
+  },
+  uña: {
+    ejemplo: 'Mantuvo las uñas de las manos limpias y cortitas.',
+    sinonimos: 'garra',
+    categoria: 'cuerpo',
+  },
+  pecho: {
+    ejemplo: 'Respiró hondo llenando el pecho de aire puro y fresco.',
+    sinonimos: 'tórax',
+    categoria: 'cuerpo',
+  },
+  panza: {
+    ejemplo: 'Se acarició la panza feliz después de una rica merienda.',
+    sinonimos: 'vientre, pancita',
+    categoria: 'cuerpo',
+  },
+  espalda: {
+    ejemplo: 'Se sentó bien derecho apoyando la espalda en el respaldo de la silla.',
+    sinonimos: 'dorso',
+    categoria: 'cuerpo',
+  },
+  pierna: {
+    ejemplo: 'Corrió con sus piernas tan rápido como pudo hasta cruzar la meta.',
+    sinonimos: 'extremidad',
+    categoria: 'cuerpo',
+  },
+  rodilla: {
+    ejemplo: 'Se puso rodilleras para protegerse las rodillas al andar en patines.',
+    sinonimos: 'articulación',
+    categoria: 'cuerpo',
+  },
+  pie: {
+    ejemplo: 'Pateó la pelota con el pie derecho directo hacia el arco.',
+    sinonimos: 'pisada',
+    categoria: 'cuerpo',
+  },
+  corazon: {
+    ejemplo: 'Sintió los latidos rápidos y fuertes de su corazón al terminar de correr.',
+    sinonimos: 'pecho',
+    categoria: 'cuerpo',
+  },
+  cerebro: {
+    ejemplo: 'Usamos el cerebro para pensar, imaginar historias y resolver problemas.',
+    sinonimos: 'mente',
+    categoria: 'cuerpo',
+  },
+  hueso: {
+    ejemplo: 'Los huesos forman el esqueleto que sostiene nuestro cuerpo.',
+    sinonimos: 'esqueleto',
+    categoria: 'cuerpo',
+  },
+  musculo: {
+    ejemplo: 'Hizo ejercicios para estirar los músculos antes de jugar al fútbol.',
+    sinonimos: 'fuerza',
+    categoria: 'cuerpo',
+  },
+  piel: {
+    ejemplo: 'Nos ponemos protector solar para cuidar la piel los días de sol.',
+    sinonimos: 'cutis',
+    categoria: 'cuerpo',
+  },
+  sangre: {
+    ejemplo: 'El corazón bombea la sangre para llevar energía a todo el cuerpo.',
+    sinonimos: 'plasma',
+    categoria: 'cuerpo',
+  },
+
   // --- Acciones de textos ---
   posarse: {
     ejemplo: 'El pajarito se posó despacito sobre la rama de un árbol.',
@@ -604,21 +736,71 @@ export function inferirDetalle(palabra, significado = '') {
   let categoria = 'objeto'
   if (sig.includes('animal') || sig.includes('ave') || sig.includes('insecto') || sig.includes('pez')) {
     categoria = 'animal'
-  } else if (sig.includes('escuela') || sig.includes('escribe') || sig.includes('clase') || sig.includes('hoja')) {
+  } else if (
+    sig.includes('cuerpo') ||
+    sig.includes('órgano') ||
+    sig.includes('hueso') ||
+    sig.includes('músculo') ||
+    sig.includes('miembro del cuerpo') ||
+    sig.includes('cabeza') ||
+    sig.includes('brazo') ||
+    sig.includes('pierna')
+  ) {
+    categoria = 'cuerpo'
+  } else if (
+    sig.includes('escuela') ||
+    sig.includes('escribe') ||
+    sig.includes('clase') ||
+    sig.includes('hoja')
+  ) {
     categoria = 'escuela'
-  } else if (sig.includes('planta') || sig.includes('árbol') || sig.includes('flor') || sig.includes('tierra') || sig.includes('agua')) {
+  } else if (
+    sig.includes('planta') ||
+    sig.includes('árbol') ||
+    sig.includes('flor') ||
+    sig.includes('tierra') ||
+    sig.includes('agua')
+  ) {
     categoria = 'naturaleza'
-  } else if (sig.includes('sentimiento') || sig.includes('persona que') || sig.includes('siente') || sig.includes('alegr')) {
+  } else if (
+    sig.includes('sentimiento') ||
+    sig.includes('persona que') ||
+    sig.includes('siente') ||
+    sig.includes('alegr')
+  ) {
     categoria = 'emoción'
-  } else if (sig.includes('comida') || sig.includes('fruta') || sig.includes('verdura') || sig.includes('alimento') || sig.includes('come')) {
+  } else if (
+    sig.includes('comida') ||
+    sig.includes('fruta') ||
+    sig.includes('verdura') ||
+    sig.includes('alimento') ||
+    sig.includes('postre') ||
+    sig.includes('plato típico') ||
+    sig.includes('bebida')
+  ) {
     categoria = 'comida'
-  } else if (sig.includes('deporte') || sig.includes('partido') || sig.includes('juego') || sig.includes('pelota')) {
+  } else if (
+    sig.includes('deporte') ||
+    sig.includes('partido') ||
+    sig.includes('juego') ||
+    sig.includes('pelota')
+  ) {
     categoria = 'deporte'
   } else if (sig.includes('acción') || norm.endsWith('ar') || norm.endsWith('er') || norm.endsWith('ir')) {
     categoria = 'acción'
-  } else if (sig.includes('máquina') || sig.includes('aparato') || sig.includes('ciencia') || sig.includes('fuerza')) {
+  } else if (
+    sig.includes('máquina') ||
+    sig.includes('aparato') ||
+    sig.includes('ciencia') ||
+    sig.includes('fuerza')
+  ) {
     categoria = 'ciencia'
-  } else if (sig.includes('lugar') || sig.includes('ciudad') || sig.includes('país') || sig.includes('camino')) {
+  } else if (
+    sig.includes('lugar') ||
+    sig.includes('ciudad') ||
+    sig.includes('país') ||
+    sig.includes('camino')
+  ) {
     categoria = 'lugar'
   } else if (sig.includes('que es') || sig.includes('muy')) {
     categoria = 'cualidad'
@@ -626,7 +808,9 @@ export function inferirDetalle(palabra, significado = '') {
 
   // Generar un ejemplo contextual amigable para chicos de primaria
   let ejemplo = null
-  if (categoria === 'acción') {
+  if (categoria === 'cuerpo') {
+    ejemplo = `Cuidamos la salud de todo nuestro cuerpo con buenos hábitos cada día.`
+  } else if (categoria === 'acción') {
     ejemplo = `En la escuela aprendemos a ${palabra} todos juntos.`
   } else if (categoria === 'animal') {
     ejemplo = `Vimos un ${palabra} en un libro de cuentos ilustrado.`
@@ -635,7 +819,7 @@ export function inferirDetalle(palabra, significado = '') {
   } else if (categoria === 'escuela') {
     ejemplo = `Usamos ${palabra} en la clase con la maestra.`
   } else if (categoria === 'comida') {
-    ejemplo = `A la hora del almuerzo compartimos un rico plato de ${palabra}.`
+    ejemplo = `En la merienda disfrutamos de ${palabra} en familia.`
   } else if (categoria === 'emoción') {
     ejemplo = `Sentimos mucha ${palabra} al terminar la actividad.`
   }
